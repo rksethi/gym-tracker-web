@@ -245,21 +245,21 @@ function requireSessionOwner(req, res, next) {
 // Auth routes (public — no requireAuth)
 // ---------------------------------------------------------------------------
 
-app.post("/api/auth/register", (req, res) => {
+app.post("/api/auth/register", async (req, res) => {
   const email = validateEmail(req.body.email);
   const password = validatePassword(req.body.password);
   const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
   if (existing) throw new ValidationError("Email already registered");
-  const hash = bcrypt.hashSync(password, SALT_ROUNDS);
+  const hash = await bcrypt.hash(password, SALT_ROUNDS);
   const info = db.prepare("INSERT INTO users (email, password_hash) VALUES (?, ?)").run(email, hash);
   res.json(issueToken(res, { id: info.lastInsertRowid, email }));
 });
 
-app.post("/api/auth/login", loginLimiter, (req, res) => {
+app.post("/api/auth/login", loginLimiter, async (req, res) => {
   const email = validateEmail(req.body.email);
   const password = requireString(req.body.password, "password", 200);
   const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
     return res.status(401).json({ error: "Invalid email or password" });
   }
   res.json(issueToken(res, { id: user.id, email: user.email }));
@@ -507,7 +507,11 @@ app.post("/api/templates", (req, res) => {
   if (!Array.isArray(exerciseIds) || exerciseIds.length === 0 || exerciseIds.length > 50) {
     throw new ValidationError("exerciseIds must be a non-empty array (max 50)");
   }
-  for (const exId of exerciseIds) requirePositiveInt(exId, "exerciseId");
+  for (const exId of exerciseIds) {
+    requirePositiveInt(exId, "exerciseId");
+    const exercise = db.prepare("SELECT id FROM exercises WHERE id = ? AND (user_id IS NULL OR user_id = ?)").get(exId, req.user.id);
+    if (!exercise) throw new ValidationError(`Exercise ${exId} not found`);
+  }
   const info = db.prepare("INSERT INTO workout_templates (name, user_id) VALUES (?, ?)").run(name, req.user.id);
   const templateId = info.lastInsertRowid;
   const insert = db.prepare("INSERT INTO template_exercises (template_id, exercise_id, order_num) VALUES (?, ?, ?)");
