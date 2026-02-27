@@ -338,10 +338,18 @@ app.post("/api/auth/recover", loginLimiter, async (req, res) => {
   if (token !== recoveryToken) return res.status(401).json({ error: "Invalid recovery token" });
   const email = validateEmail(req.body.email);
   const password = validatePassword(req.body.password);
-  const user = db.prepare("SELECT id, is_admin FROM users WHERE email = ? COLLATE NOCASE").get(email);
-  if (!user || !user.is_admin) return res.status(404).json({ error: "Admin account not found" });
+  const adminEmail = (process.env.ADMIN_EMAIL || "").toLowerCase();
+  if (!adminEmail || email.toLowerCase() !== adminEmail) {
+    return res.status(403).json({ error: "Recovery is only available for the configured ADMIN_EMAIL" });
+  }
   const hash = await bcrypt.hash(password, SALT_ROUNDS);
-  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, user.id);
+  let user = db.prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE").get(email);
+  if (user) {
+    db.prepare("UPDATE users SET password_hash = ?, is_admin = 1 WHERE id = ?").run(hash, user.id);
+  } else {
+    const info = db.prepare("INSERT INTO users (email, password_hash, is_admin) VALUES (?, ?, 1)").run(email, hash);
+    user = { id: info.lastInsertRowid };
+  }
   logAccess("password_reset_recovery", email, user.id, req);
   res.json({ ok: true });
 });
