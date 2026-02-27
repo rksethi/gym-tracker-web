@@ -51,17 +51,17 @@ export default function History() {
                   <Link
                     key={s.id}
                     to={`/history/${s.id}`}
-                    className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition"
+                    className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition"
                   >
-                    <div>
-                      <p className="font-semibold text-sm">{s.name}</p>
-                      <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm truncate">{s.name}</p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 mt-1">
                         <span>⏱ {formatDuration(s.duration)}</span>
                         <span>🏋️ {s.exercise_count} ex.</span>
                         <span>📊 {s.total_sets} sets</span>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <p className="text-xs text-gray-400">
                         {new Date(s.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
                       </p>
@@ -84,10 +84,10 @@ export default function History() {
 
 function StatCard({ icon, value, label }: { icon: string; value: string; label: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-      <p className="text-2xl mb-1">{icon}</p>
-      <p className="text-xl font-bold">{value}</p>
-      <p className="text-xs text-gray-500">{label}</p>
+    <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 text-center">
+      <p className="text-xl sm:text-2xl mb-0.5">{icon}</p>
+      <p className="text-base sm:text-xl font-bold truncate">{value}</p>
+      <p className="text-[11px] sm:text-xs text-gray-500 truncate">{label}</p>
     </div>
   );
 }

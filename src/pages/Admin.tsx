@@ -66,12 +66,12 @@ export default function Admin() {
   return (
     <div>
       <h1 className="text-xl font-bold text-gray-900 mb-4">Admin Panel</h1>
-      <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+            className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition shrink-0 ${
               tab === t.key ? "bg-white shadow-sm text-accent-700" : "text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -125,14 +125,14 @@ function InviteCodesTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <p className="text-sm text-gray-500">
           Generate codes to share with friends. Each code is single-use and expires after 7 days.
         </p>
         <button
           onClick={createCode}
           disabled={creating}
-          className="bg-accent-600 hover:bg-accent-700 text-white font-semibold px-4 py-2 rounded-xl text-sm transition disabled:opacity-50 shrink-0 ml-4"
+          className="bg-accent-600 hover:bg-accent-700 text-white font-semibold px-4 py-2 rounded-xl text-sm transition disabled:opacity-50 shrink-0 w-full sm:w-auto"
         >
           {creating ? "Creating..." : "Generate Code"}
         </button>
@@ -148,31 +148,33 @@ function InviteCodesTab() {
             const status = codeStatus(c);
             const isActive = !c.used_by_email && new Date(c.expires_at + "Z") >= new Date();
             return (
-              <div key={c.id} className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-3">
-                    <code className="text-lg font-mono font-bold tracking-widest text-gray-800">{c.code}</code>
-                    <span className={`text-xs font-medium ${status.color}`}>{status.label}</span>
+              <div key={c.id} className="bg-white rounded-xl border border-gray-200 px-3 sm:px-4 py-3">
+                <div className="flex items-start sm:items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-base sm:text-lg font-mono font-bold tracking-widest text-gray-800">{c.code}</code>
+                      <span className={`text-xs font-medium ${status.color}`}>{status.label}</span>
+                    </div>
+                    <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">
+                      Created {formatDate(c.created_at)} · Expires {formatDate(c.expires_at)}
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Created {formatDate(c.created_at)} · Expires {formatDate(c.expires_at)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {isActive && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isActive && (
+                      <button
+                        onClick={() => copyCode(c.code, c.id)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
+                      >
+                        {copiedId === c.id ? "Copied!" : "Copy"}
+                      </button>
+                    )}
                     <button
-                      onClick={() => copyCode(c.code, c.id)}
-                      className="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
+                      onClick={() => deleteCode(c.id)}
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition"
                     >
-                      {copiedId === c.id ? "Copied!" : "Copy"}
+                      Delete
                     </button>
-                  )}
-                  <button
-                    onClick={() => deleteCode(c.id)}
-                    className="text-xs font-medium px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition"
-                  >
-                    Delete
-                  </button>
+                  </div>
                 </div>
               </div>
             );
@@ -222,19 +224,19 @@ function UsersTab() {
 
       <div className="space-y-2">
         {users.map((u) => (
-          <div key={u.id} className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-800">{u.email}</span>
-                {u.is_admin ? <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-100 text-accent-700">Admin</span> : null}
+          <div key={u.id} className="bg-white rounded-xl border border-gray-200 px-3 sm:px-4 py-3 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-medium text-gray-800 truncate">{u.email}</span>
+                {u.is_admin ? <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-100 text-accent-700 shrink-0">Admin</span> : null}
               </div>
               <p className="text-xs text-gray-400 mt-0.5">Joined {formatDate(u.created_at)}</p>
             </div>
             <button
               onClick={() => { setResetTarget(u); setNewPassword(""); setResetError(""); setResetSuccess(""); }}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition shrink-0"
+              className="text-xs font-medium px-2 sm:px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition shrink-0"
             >
-              Reset Password
+              Reset
             </button>
           </div>
         ))}
@@ -306,8 +308,8 @@ function AccessLogsTab() {
           No access logs yet.
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+          <table className="w-full text-sm min-w-[480px]">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-2.5 font-medium text-gray-500">When</th>

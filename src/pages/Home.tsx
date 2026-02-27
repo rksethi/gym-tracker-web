@@ -112,17 +112,17 @@ export default function Home() {
               <Link
                 key={s.id}
                 to={`/history/${s.id}`}
-                className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition"
+                className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition"
               >
-                <div>
-                  <p className="font-semibold text-sm">{s.name}</p>
-                  <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate">{s.name}</p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 mt-1">
                     <span>⏱ {formatDuration(s.duration)}</span>
                     <span>🏋️ {s.exercise_count} exercises</span>
                     <span>📊 {s.total_sets} sets</span>
                   </div>
                 </div>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-400 shrink-0">
                   {new Date(s.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                 </span>
               </Link>

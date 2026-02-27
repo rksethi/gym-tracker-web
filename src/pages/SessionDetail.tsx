@@ -45,7 +45,7 @@ export default function SessionDetail() {
       {/* Overview */}
       <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
         <Row label="Date" value={new Date(session.date).toLocaleDateString(undefined, {
-          weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
+          weekday: "short", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
         })} />
         <Row label="Duration" value={formatDuration(session.duration)} />
         <Row label="Exercises" value={session.entries.length.toString()} />
@@ -61,23 +61,23 @@ export default function SessionDetail() {
 
         return (
           <section key={entry.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span>{categoryIcon(entry.exercise_category)}</span>
-                <span className="font-semibold text-sm">{entry.exercise_name}</span>
-                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+            <div className="px-3 sm:px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="shrink-0">{categoryIcon(entry.exercise_category)}</span>
+                <span className="font-semibold text-sm truncate">{entry.exercise_name}</span>
+                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0 hidden sm:inline">
                   {categoryLabel(entry.exercise_category)}
                 </span>
               </div>
               {entry.max_heart_rate && (
-                <span className="text-xs text-red-500 font-medium">❤️ {entry.max_heart_rate} bpm</span>
+                <span className="text-xs text-red-500 font-medium shrink-0">❤️ {entry.max_heart_rate} bpm</span>
               )}
             </div>
 
             <div className="divide-y divide-gray-50">
               {entry.sets.map((s) => (
-                <div key={s.id} className={`px-4 py-2 grid grid-cols-4 text-sm ${s.is_completed ? "bg-green-50/50" : ""}`}>
-                  <span className="text-gray-400">Set {s.set_number}</span>
+                <div key={s.id} className={`px-3 sm:px-4 py-2 grid grid-cols-[2rem_1fr_1fr_2rem] sm:grid-cols-4 gap-1 text-sm ${s.is_completed ? "bg-green-50/50" : ""}`}>
+                  <span className="text-gray-400">{s.set_number}</span>
                   <span className="text-center font-medium">
                     {s.weight > 0 ? `${s.weight} ${s.unit}` : "—"}
                   </span>
@@ -116,9 +116,9 @@ export default function SessionDetail() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-4 py-3 flex justify-between text-sm">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium">{value}</span>
+    <div className="px-4 py-3 flex justify-between gap-4 text-sm">
+      <span className="text-gray-500 shrink-0">{label}</span>
+      <span className="font-medium text-right break-words min-w-0">{value}</span>
     </div>
   );
 }

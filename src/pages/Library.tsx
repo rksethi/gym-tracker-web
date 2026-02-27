@@ -27,18 +27,18 @@ export default function Library() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Exercise Library</h1>
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold shrink-0">Exercises</h1>
+        <div className="flex gap-2 shrink-0">
           <Link
             to="/library/templates"
-            className="px-3 py-2 rounded-xl bg-gray-100 text-sm font-medium hover:bg-gray-200 transition"
+            className="px-2.5 sm:px-3 py-2 rounded-xl bg-gray-100 text-xs sm:text-sm font-medium hover:bg-gray-200 transition"
           >
             📋 Templates
           </Link>
           <button
             onClick={() => setShowAddCustom(true)}
-            className="px-3 py-2 rounded-xl bg-accent-500 text-white text-sm font-medium hover:bg-accent-600 transition"
+            className="px-2.5 sm:px-3 py-2 rounded-xl bg-accent-500 text-white text-xs sm:text-sm font-medium hover:bg-accent-600 transition"
           >
             ＋ Add
           </button>

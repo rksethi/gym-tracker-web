@@ -88,7 +88,7 @@ export default function ActiveWorkout() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-4 pb-24">
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-4" style={{ paddingBottom: "max(6rem, calc(4rem + env(safe-area-inset-bottom)))" }}>
         {/* Workout Name */}
         <input
           type="text"
@@ -188,15 +188,15 @@ function EntryCard({
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <span>{categoryIcon(entry.exercise_category)}</span>
-          <span className="font-semibold text-sm">{entry.exercise_name}</span>
-          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+      <div className="px-3 sm:px-4 py-3 flex items-center justify-between border-b border-gray-100 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="shrink-0">{categoryIcon(entry.exercise_category)}</span>
+          <span className="font-semibold text-sm truncate">{entry.exercise_name}</span>
+          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0 hidden sm:inline">
             {categoryLabel(entry.exercise_category)}
           </span>
         </div>
-        <button onClick={onRemove} className="text-gray-400 hover:text-red-500 text-lg">×</button>
+        <button onClick={onRemove} className="text-gray-400 hover:text-red-500 text-lg shrink-0">×</button>
       </div>
 
       {/* Heart Rate */}
@@ -217,8 +217,8 @@ function EntryCard({
       </div>
 
       {/* Set Header */}
-      <div className="px-4 py-2 grid grid-cols-[2rem_1fr_4.5rem_2.5rem] gap-2 text-xs font-semibold text-gray-400 uppercase">
-        <span>Set</span>
+      <div className="px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_3.5rem_3.5rem] sm:grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-1.5 sm:gap-2 text-xs font-semibold text-gray-400 uppercase">
+        <span>#</span>
         <span className="text-center">Weight</span>
         <span className="text-center">Reps</span>
         <span></span>
@@ -262,7 +262,7 @@ function SetRow({
   const [reps, setReps] = useState(set.reps.toString());
 
   return (
-    <div className={`px-4 py-2 grid grid-cols-[2rem_1fr_4.5rem_2.5rem] gap-2 items-center border-t border-gray-50 group ${set.is_completed ? "bg-green-50/50" : ""}`}>
+    <div className={`px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_3.5rem_3.5rem] sm:grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-1.5 sm:gap-2 items-center border-t border-gray-50 ${set.is_completed ? "bg-green-50/50" : ""}`}>
       <span className="text-sm font-medium text-gray-400">{set.set_number}</span>
 
       <div className="flex items-center gap-1">
@@ -271,11 +271,11 @@ function SetRow({
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           onBlur={() => onUpdate({ weight: parseFloat(weight) || 0 })}
-          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center focus:ring-1 focus:ring-accent-400"
+          className="w-full border border-gray-200 rounded-lg px-1.5 py-1.5 text-sm text-center focus:ring-1 focus:ring-accent-400"
         />
         <button
           onClick={() => onUpdate({ unit: set.unit === "lbs" ? "kg" : "lbs" })}
-          className="text-xs font-semibold text-gray-400 bg-gray-100 rounded px-1.5 py-1 hover:bg-gray-200 shrink-0"
+          className="text-[11px] font-semibold text-gray-400 bg-gray-100 rounded px-1 py-1 hover:bg-gray-200 shrink-0"
         >
           {set.unit}
         </button>
@@ -286,7 +286,7 @@ function SetRow({
         value={reps}
         onChange={(e) => setReps(e.target.value)}
         onBlur={() => onUpdate({ reps: parseInt(reps, 10) || 0 })}
-        className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center focus:ring-1 focus:ring-accent-400"
+        className="border border-gray-200 rounded-lg px-1.5 py-1.5 text-sm text-center focus:ring-1 focus:ring-accent-400"
       />
 
       <div className="flex items-center gap-1">
@@ -298,7 +298,7 @@ function SetRow({
         </button>
         <button
           onClick={onDelete}
-          className="text-gray-300 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition"
+          className="text-gray-300 active:text-red-400 hover:text-red-400 text-xs transition"
         >
           🗑
         </button>

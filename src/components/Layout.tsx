@@ -51,12 +51,12 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 pb-24 sm:pb-6">
         <Outlet />
       </main>
 
       <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-30">
-        <div className="flex justify-around py-2">
+        <div className="flex justify-around py-2" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
           {links.map((l) => (
             <NavLink
               key={l.to}
