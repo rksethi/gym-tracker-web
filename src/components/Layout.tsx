@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const links = [
+const baseLinks = [
   { to: "/", label: "Home", icon: "🏠" },
   { to: "/library", label: "Library", icon: "📚" },
   { to: "/history", label: "History", icon: "🕐" },
@@ -9,6 +9,10 @@ const links = [
 
 export default function Layout() {
   const { user, logout } = useAuth();
+
+  const links = user?.is_admin
+    ? [...baseLinks, { to: "/admin", label: "Admin", icon: "⚙️" }]
+    : baseLinks;
 
   return (
     <div className="min-h-screen flex flex-col">

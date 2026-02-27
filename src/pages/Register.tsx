@@ -15,6 +15,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -25,12 +26,13 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
+    if (!inviteCode.trim()) { setError("Invite code is required"); return; }
     if (!allRulesPass) { setError("Password does not meet requirements"); return; }
     if (!passwordsMatch) { setError("Passwords do not match"); return; }
 
     setSubmitting(true);
     try {
-      await register(email, password);
+      await register(email, password, inviteCode.trim());
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Registration failed");
@@ -54,6 +56,20 @@ export default function Register() {
               {error}
             </div>
           )}
+
+          <div>
+            <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700 mb-1">Invite Code</label>
+            <input
+              id="inviteCode"
+              type="text"
+              required
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm tracking-widest font-mono focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              placeholder="Enter your invite code"
+              maxLength={20}
+            />
+          </div>
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>

@@ -3,13 +3,14 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 interface User {
   id: number;
   email: string;
+  is_admin: number;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, inviteCode: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -49,8 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u);
   }, []);
 
-  const register = useCallback(async (email: string, password: string) => {
-    const u = await authRequest("/api/auth/register", { email, password });
+  const register = useCallback(async (email: string, password: string, inviteCode: string) => {
+    const u = await authRequest("/api/auth/register", { email, password, inviteCode });
     setUser(u);
   }, []);
 

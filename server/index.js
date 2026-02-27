@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const crypto = require("crypto");
 const Database = require("better-sqlite3");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -11,10 +12,16 @@ const { seedExercises } = require("./seed");
 const app = express();
 const PORT = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === "production";
+if (IS_PROD && !process.env.JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET environment variable is required in production");
+  process.exit(1);
+}
 const JWT_SECRET = process.env.JWT_SECRET || "dev-only-secret-change-in-production";
 const JWT_EXPIRY = "7d";
 const COOKIE_NAME = "gymtracker_token";
 const SALT_ROUNDS = 12;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "";
+const INVITE_CODE_EXPIRY_DAYS = 7;
 
 // ---------------------------------------------------------------------------
 // Security middleware
@@ -189,14 +196,37 @@ db.exec(`
     exercise_id INTEGER NOT NULL REFERENCES exercises(id),
     order_num INTEGER NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS invite_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT NOT NULL UNIQUE,
+    created_by INTEGER NOT NULL REFERENCES users(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL,
+    used_by INTEGER REFERENCES users(id),
+    used_at TEXT
+  );
+  CREATE TABLE IF NOT EXISTS access_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    email TEXT NOT NULL,
+    action TEXT NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
-// Migration for existing databases without user_id columns
+// Migrations for existing databases
 try { db.exec("ALTER TABLE exercises ADD COLUMN user_id INTEGER REFERENCES users(id)"); } catch {}
 try { db.exec("ALTER TABLE workout_sessions ADD COLUMN user_id INTEGER REFERENCES users(id)"); } catch {}
 try { db.exec("ALTER TABLE workout_templates ADD COLUMN user_id INTEGER REFERENCES users(id)"); } catch {}
+try { db.exec("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0"); } catch {}
 
 seedExercises(db);
+
+if (ADMIN_EMAIL) {
+  db.prepare("UPDATE users SET is_admin = 1 WHERE email = ? COLLATE NOCASE").run(ADMIN_EMAIL.toLowerCase());
+}
 
 // ---------------------------------------------------------------------------
 // Auth helpers
@@ -215,7 +245,17 @@ function cookieOptions() {
 function issueToken(res, user) {
   const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
   res.cookie(COOKIE_NAME, token, cookieOptions());
-  return { id: user.id, email: user.email };
+  return { id: user.id, email: user.email, is_admin: user.is_admin || 0 };
+}
+
+function logAccess(action, email, userId, req) {
+  db.prepare("INSERT INTO access_logs (user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)").run(
+    userId, email, action, req.ip || req.connection?.remoteAddress || "unknown", (req.headers["user-agent"] || "").slice(0, 500)
+  );
+}
+
+function generateInviteCode() {
+  return crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
 function requireAuth(req, res, next) {
@@ -248,11 +288,23 @@ function requireSessionOwner(req, res, next) {
 app.post("/api/auth/register", async (req, res) => {
   const email = validateEmail(req.body.email);
   const password = validatePassword(req.body.password);
+  const code = requireString(req.body.inviteCode, "invite code", 20);
+
+  const invite = db.prepare(
+    "SELECT * FROM invite_codes WHERE code = ? AND used_by IS NULL AND expires_at > datetime('now')"
+  ).get(code);
+  if (!invite) throw new ValidationError("Invalid or expired invite code");
+
   const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
   if (existing) throw new ValidationError("Email already registered");
   const hash = await bcrypt.hash(password, SALT_ROUNDS);
   const info = db.prepare("INSERT INTO users (email, password_hash) VALUES (?, ?)").run(email, hash);
-  res.json(issueToken(res, { id: info.lastInsertRowid, email }));
+  const userId = info.lastInsertRowid;
+
+  db.prepare("UPDATE invite_codes SET used_by = ?, used_at = datetime('now') WHERE id = ?").run(userId, invite.id);
+
+  logAccess("register", email, userId, req);
+  res.json(issueToken(res, { id: userId, email, is_admin: 0 }));
 });
 
 app.post("/api/auth/login", loginLimiter, async (req, res) => {
@@ -262,10 +314,18 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   if (!user || !(await bcrypt.compare(password, user.password_hash))) {
     return res.status(401).json({ error: "Invalid email or password" });
   }
-  res.json(issueToken(res, { id: user.id, email: user.email }));
+  logAccess("login", user.email, user.id, req);
+  res.json(issueToken(res, { id: user.id, email: user.email, is_admin: user.is_admin }));
 });
 
-app.post("/api/auth/logout", (_req, res) => {
+app.post("/api/auth/logout", (req, res) => {
+  const token = req.cookies[COOKIE_NAME];
+  if (token) {
+    try {
+      const payload = jwt.verify(token, JWT_SECRET);
+      logAccess("logout", payload.email, payload.userId, req);
+    } catch {}
+  }
   res.clearCookie(COOKIE_NAME, { path: "/" });
   res.set("Clear-Site-Data", '"cookies", "storage"');
   res.json({ ok: true });
@@ -276,7 +336,7 @@ app.get("/api/auth/me", (req, res) => {
   if (!token) return res.status(401).json({ error: "Not authenticated" });
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare("SELECT id, email FROM users WHERE id = ?").get(payload.userId);
+    const user = db.prepare("SELECT id, email, is_admin FROM users WHERE id = ?").get(payload.userId);
     if (!user) { res.clearCookie(COOKIE_NAME); return res.status(401).json({ error: "User not found" }); }
     res.json(user);
   } catch {
@@ -290,6 +350,55 @@ app.get("/api/auth/me", (req, res) => {
 // ---------------------------------------------------------------------------
 
 app.use("/api", requireAuth);
+
+// ---------------------------------------------------------------------------
+// Admin middleware & routes
+// ---------------------------------------------------------------------------
+
+function requireAdmin(req, res, next) {
+  const user = db.prepare("SELECT is_admin FROM users WHERE id = ?").get(req.user.id);
+  if (!user || !user.is_admin) return res.status(403).json({ error: "Admin access required" });
+  next();
+}
+
+app.get("/api/admin/invite-codes", requireAdmin, (req, res) => {
+  const codes = db.prepare(`
+    SELECT ic.*, u1.email as created_by_email, u2.email as used_by_email
+    FROM invite_codes ic
+    JOIN users u1 ON u1.id = ic.created_by
+    LEFT JOIN users u2 ON u2.id = ic.used_by
+    ORDER BY ic.created_at DESC
+  `).all();
+  res.json(codes);
+});
+
+app.post("/api/admin/invite-codes", requireAdmin, (req, res) => {
+  const code = generateInviteCode();
+  const expiresAt = new Date(Date.now() + INVITE_CODE_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString().replace("T", " ").slice(0, 19);
+  db.prepare("INSERT INTO invite_codes (code, created_by, expires_at) VALUES (?, ?, ?)").run(code, req.user.id, expiresAt);
+  res.json({ code, expires_at: expiresAt });
+});
+
+app.delete("/api/admin/invite-codes/:id", requireAdmin, (req, res) => {
+  const id = requirePositiveInt(req.params.id, "id");
+  const code = db.prepare("SELECT id FROM invite_codes WHERE id = ?").get(id);
+  if (!code) return res.status(404).json({ error: "Invite code not found" });
+  db.prepare("DELETE FROM invite_codes WHERE id = ?").run(id);
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/access-logs", requireAdmin, (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 500);
+  const offset = Math.max(Number(req.query.offset) || 0, 0);
+  const logs = db.prepare("SELECT * FROM access_logs ORDER BY created_at DESC LIMIT ? OFFSET ?").all(limit, offset);
+  const total = db.prepare("SELECT COUNT(*) as count FROM access_logs").get();
+  res.json({ logs, total: total.count });
+});
+
+app.get("/api/admin/users", requireAdmin, (req, res) => {
+  const users = db.prepare("SELECT id, email, is_admin, created_at FROM users ORDER BY created_at DESC").all();
+  res.json(users);
+});
 
 // ---------------------------------------------------------------------------
 // Exercises (preset exercises shared; custom scoped to user)
