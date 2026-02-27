@@ -135,8 +135,8 @@ function CreateTemplateModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 overflow-hidden">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0">
           <button onClick={onClose} className="text-sm text-gray-500">Cancel</button>
           <h3 className="font-bold text-sm">New Template</h3>
