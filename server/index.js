@@ -331,6 +331,21 @@ app.post("/api/auth/logout", (req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/api/auth/recover", loginLimiter, async (req, res) => {
+  const recoveryToken = process.env.ADMIN_RECOVERY_TOKEN;
+  if (!recoveryToken) return res.status(404).json({ error: "Recovery not enabled" });
+  const token = requireString(req.body.token, "token", 200);
+  if (token !== recoveryToken) return res.status(401).json({ error: "Invalid recovery token" });
+  const email = validateEmail(req.body.email);
+  const password = validatePassword(req.body.password);
+  const user = db.prepare("SELECT id, is_admin FROM users WHERE email = ? COLLATE NOCASE").get(email);
+  if (!user || !user.is_admin) return res.status(404).json({ error: "Admin account not found" });
+  const hash = await bcrypt.hash(password, SALT_ROUNDS);
+  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, user.id);
+  logAccess("password_reset_recovery", email, user.id, req);
+  res.json({ ok: true });
+});
+
 app.get("/api/auth/me", (req, res) => {
   const token = req.cookies[COOKIE_NAME];
   if (!token) return res.status(401).json({ error: "Not authenticated" });
@@ -398,6 +413,17 @@ app.get("/api/admin/access-logs", requireAdmin, (req, res) => {
 app.get("/api/admin/users", requireAdmin, (req, res) => {
   const users = db.prepare("SELECT id, email, is_admin, created_at FROM users ORDER BY created_at DESC").all();
   res.json(users);
+});
+
+app.post("/api/admin/reset-password", requireAdmin, async (req, res) => {
+  const userId = requirePositiveInt(req.body.userId, "userId");
+  const password = validatePassword(req.body.password);
+  const user = db.prepare("SELECT id, email FROM users WHERE id = ?").get(userId);
+  if (!user) throw new ValidationError("User not found");
+  const hash = await bcrypt.hash(password, SALT_ROUNDS);
+  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, userId);
+  logAccess("password_reset_admin", user.email, req.user.id, req);
+  res.json({ ok: true });
 });
 
 // ---------------------------------------------------------------------------

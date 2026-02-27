@@ -47,31 +47,39 @@ async function apiRequest<T>(url: string, opts?: RequestInit): Promise<T> {
   return res.json();
 }
 
+interface AdminUser {
+  id: number;
+  email: string;
+  is_admin: number;
+  created_at: string;
+}
+
 export default function Admin() {
-  const [tab, setTab] = useState<"codes" | "logs">("codes");
+  const [tab, setTab] = useState<"codes" | "logs" | "users">("codes");
+
+  const tabs = [
+    { key: "codes" as const, label: "Invite Codes" },
+    { key: "users" as const, label: "Users" },
+    { key: "logs" as const, label: "Access Logs" },
+  ];
 
   return (
     <div>
       <h1 className="text-xl font-bold text-gray-900 mb-4">Admin Panel</h1>
       <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
-        <button
-          onClick={() => setTab("codes")}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-            tab === "codes" ? "bg-white shadow-sm text-accent-700" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Invite Codes
-        </button>
-        <button
-          onClick={() => setTab("logs")}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-            tab === "logs" ? "bg-white shadow-sm text-accent-700" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Access Logs
-        </button>
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+              tab === t.key ? "bg-white shadow-sm text-accent-700" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
-      {tab === "codes" ? <InviteCodesTab /> : <AccessLogsTab />}
+      {tab === "codes" ? <InviteCodesTab /> : tab === "users" ? <UsersTab /> : <AccessLogsTab />}
     </div>
   );
 }
@@ -169,6 +177,102 @@ function InviteCodesTab() {
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UsersTab() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [resetTarget, setResetTarget] = useState<AdminUser | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
+
+  useEffect(() => {
+    apiRequest<AdminUser[]>("/api/admin/users")
+      .then(setUsers)
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleReset() {
+    if (!resetTarget) return;
+    setResetError("");
+    setResetSuccess("");
+    try {
+      await apiRequest("/api/admin/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ userId: resetTarget.id, password: newPassword }),
+      });
+      setResetSuccess(`Password updated for ${resetTarget.email}`);
+      setNewPassword("");
+      setTimeout(() => { setResetTarget(null); setResetSuccess(""); }, 2000);
+    } catch (err: any) {
+      setResetError(err.message || "Reset failed");
+    }
+  }
+
+  if (loading) return <p className="text-sm text-gray-400">Loading...</p>;
+
+  return (
+    <div>
+      <p className="text-sm text-gray-500 mb-4">{users.length} registered users</p>
+
+      <div className="space-y-2">
+        {users.map((u) => (
+          <div key={u.id} className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-800">{u.email}</span>
+                {u.is_admin ? <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-100 text-accent-700">Admin</span> : null}
+              </div>
+              <p className="text-xs text-gray-400 mt-0.5">Joined {formatDate(u.created_at)}</p>
+            </div>
+            <button
+              onClick={() => { setResetTarget(u); setNewPassword(""); setResetError(""); setResetSuccess(""); }}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition shrink-0"
+            >
+              Reset Password
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {resetTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => setResetTarget(null)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Reset Password</h3>
+            <p className="text-sm text-gray-500 mb-4">{resetTarget.email}</p>
+
+            {resetError && <div className="bg-red-50 text-red-600 text-sm rounded-lg px-4 py-2 mb-3 border border-red-200">{resetError}</div>}
+            {resetSuccess && <div className="bg-green-50 text-green-600 text-sm rounded-lg px-4 py-2 mb-3 border border-green-200">{resetSuccess}</div>}
+
+            <input
+              type="password"
+              placeholder="New password (min 8 chars, upper+lower+number)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm mb-3 focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setResetTarget(null)}
+                className="flex-1 text-sm font-medium py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={newPassword.length < 8}
+                className="flex-1 text-sm font-semibold py-2.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white transition disabled:opacity-50"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
