@@ -144,7 +144,9 @@ function validatePassword(password) {
 // Database
 // ---------------------------------------------------------------------------
 
-const db = new Database(path.join(__dirname, "gymtracker.db"));
+const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, "gymtracker.db");
+const db = new Database(DB_PATH);
+if (!IS_PROD) console.log(`Database: ${DB_PATH}`);
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
 
