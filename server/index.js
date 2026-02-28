@@ -595,8 +595,12 @@ app.post("/api/entries/:id/sets", (req, res) => {
   if (!entry) return res.status(404).json({ error: "Entry not found" });
   if (entry.user_id !== req.user.id) return res.status(403).json({ error: "Forbidden" });
 
-  const maxSet = db.prepare("SELECT COALESCE(MAX(set_number), 0) as m FROM exercise_sets WHERE entry_id = ?").get(entryId);
-  db.prepare("INSERT INTO exercise_sets (entry_id, set_number) VALUES (?, ?)").run(entryId, (maxSet?.m ?? 0) + 1);
+  const lastSet = db.prepare("SELECT set_number, weight, reps, unit FROM exercise_sets WHERE entry_id = ? ORDER BY set_number DESC LIMIT 1").get(entryId);
+  const nextNum = (lastSet?.set_number ?? 0) + 1;
+  const w = lastSet?.weight ?? 0;
+  const r = lastSet?.reps ?? 0;
+  const u = lastSet?.unit ?? "lbs";
+  db.prepare("INSERT INTO exercise_sets (entry_id, set_number, weight, reps, unit) VALUES (?, ?, ?, ?, ?)").run(entryId, nextNum, w, r, u);
   res.json(getFullSession(entry.session_id, req.user.id));
 });
 
