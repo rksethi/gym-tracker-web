@@ -9,3 +9,5 @@ dist/
 *.env.local
 .vite/
 test-screenshots/
+test-results/
+playwright-report/

@@ -50,7 +50,9 @@ app.use(
   })
 );
 
-const apiLimiter = rateLimit({
+const SKIP_RATE_LIMIT = process.env.DISABLE_RATE_LIMIT === "1";
+
+const apiLimiter = SKIP_RATE_LIMIT ? (_req, _res, next) => next() : rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
   standardHeaders: true,
@@ -59,7 +61,7 @@ const apiLimiter = rateLimit({
 });
 app.use("/api", apiLimiter);
 
-const loginLimiter = rateLimit({
+const loginLimiter = SKIP_RATE_LIMIT ? (_req, _res, next) => next() : rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
