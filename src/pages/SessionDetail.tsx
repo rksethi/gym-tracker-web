@@ -95,8 +95,17 @@ export default function SessionDetail() {
               {entry.sets.map((s) => (
                 <div key={s.id} className={`px-3 sm:px-4 py-2 grid grid-cols-[2rem_1fr_1fr_2rem] sm:grid-cols-4 gap-1 text-sm ${s.is_completed ? "bg-accent-500/10" : ""}`}>
                   <span className="text-gray-500">{s.set_number}</span>
-                  <span className="text-center font-medium">{s.weight > 0 ? `${s.weight} ${s.unit}` : "—"}</span>
-                  <span className="text-center">{s.reps} reps</span>
+                  {entry.exercise_category === "cardio" ? (
+                    <>
+                      <span className="text-center font-medium capitalize">{s.intensity ?? "—"}</span>
+                      <span className="text-center">{(s.duration_minutes ?? 0) > 0 ? `${s.duration_minutes} min` : "—"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-center font-medium">{s.weight > 0 ? `${s.weight} ${s.unit}` : "—"}</span>
+                      <span className="text-center">{s.reps} reps</span>
+                    </>
+                  )}
                   <span className={`text-right ${s.is_completed ? "text-accent-400" : "text-gray-600"}`}>
                     {s.is_completed ? <IconCheckCircle size={18} /> : <IconCircle size={18} />}
                   </span>

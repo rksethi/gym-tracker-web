@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
-import type { Exercise, ExerciseSet, WorkoutEntry, WorkoutSession } from "../types";
+import type { Exercise, ExerciseCategory, ExerciseSet, Intensity, WorkoutEntry, WorkoutSession } from "../types";
 import { categoryIcon, categoryLabel, CATEGORIES, formatDuration } from "../types";
-import { IconDumbbell, IconPlus, IconCheckCircle, IconCircle, IconTrash, IconHeart, IconClipboard, IconCheck } from "../components/Icons";
+import { IconDumbbell, IconPlus, IconCheckCircle, IconCircle, IconTrash, IconHeart, IconClipboard, IconCheck, IconTimer } from "../components/Icons";
+
+const INTENSITY_OPTIONS: { value: Intensity; label: string }[] = [
+  { value: "low", label: "Low" },
+  { value: "moderate", label: "Moderate" },
+  { value: "high", label: "High" },
+  { value: "max", label: "Max" },
+];
 
 export default function ActiveWorkout() {
   const { id } = useParams<{ id: string }>();
@@ -186,6 +193,7 @@ function EntryCard({
   onUpdateHeartRate: (hr: number | null) => void;
 }) {
   const [hrValue, setHrValue] = useState(entry.max_heart_rate?.toString() ?? "");
+  const isCardio = entry.exercise_category === "cardio";
 
   return (
     <div className="bg-surface-50 rounded-xl border border-surface-300 overflow-hidden">
@@ -213,19 +221,34 @@ function EntryCard({
         {hrValue && <span className="text-xs text-gray-500">bpm</span>}
       </div>
 
-      <div className="px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_3.5rem_3.5rem] sm:grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-1.5 sm:gap-2 text-xs font-semibold text-gray-500 uppercase">
-        <span>#</span>
-        <span className="text-center">Weight</span>
-        <span className="text-center">Reps</span>
-        <span></span>
-      </div>
-
-      {entry.sets.map((s) => (
-        <SetRow key={s.id} set={s} onUpdate={(data) => onUpdateSet(s.id, data)} onDelete={() => onDeleteSet(s.id)} />
-      ))}
+      {isCardio ? (
+        <>
+          <div className="px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_5rem_3.5rem] sm:grid-cols-[2rem_1fr_5rem_3.5rem] gap-1.5 sm:gap-2 text-xs font-semibold text-gray-500 uppercase">
+            <span>#</span>
+            <span className="text-center">Intensity</span>
+            <span className="text-center">Duration</span>
+            <span></span>
+          </div>
+          {entry.sets.map((s) => (
+            <CardioSetRow key={s.id} set={s} onUpdate={(data) => onUpdateSet(s.id, data)} onDelete={() => onDeleteSet(s.id)} />
+          ))}
+        </>
+      ) : (
+        <>
+          <div className="px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_3.5rem_3.5rem] sm:grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-1.5 sm:gap-2 text-xs font-semibold text-gray-500 uppercase">
+            <span>#</span>
+            <span className="text-center">Weight</span>
+            <span className="text-center">Reps</span>
+            <span></span>
+          </div>
+          {entry.sets.map((s) => (
+            <SetRow key={s.id} set={s} onUpdate={(data) => onUpdateSet(s.id, data)} onDelete={() => onDeleteSet(s.id)} />
+          ))}
+        </>
+      )}
 
       <button onClick={onAddSet} className="w-full py-2.5 text-sm font-medium text-accent-400 hover:bg-accent-500/10 transition inline-flex items-center justify-center gap-1">
-        <IconPlus size={14} /> Add Set
+        <IconPlus size={14} /> {isCardio ? "Add Interval" : "Add Set"}
       </button>
     </div>
   );
@@ -282,11 +305,61 @@ function SetRow({ set, onUpdate, onDelete }: {
   );
 }
 
+function CardioSetRow({ set, onUpdate, onDelete }: {
+  set: ExerciseSet;
+  onUpdate: (data: Partial<ExerciseSet>) => void;
+  onDelete: () => void;
+}) {
+  const [dur, setDur] = useState((set.duration_minutes ?? 0).toString());
+
+  return (
+    <div className={`px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_5rem_3.5rem] sm:grid-cols-[2rem_1fr_5rem_3.5rem] gap-1.5 sm:gap-2 items-center border-t border-surface-300 ${set.is_completed ? "bg-accent-500/10" : ""}`}>
+      <span className="text-sm font-medium text-gray-500">{set.set_number}</span>
+
+      <select
+        value={set.intensity ?? "moderate"}
+        onChange={(e) => onUpdate({ intensity: e.target.value as Intensity })}
+        className="w-full bg-surface-200 border border-surface-400 rounded-lg px-1.5 py-1.5 text-sm text-gray-100 focus:ring-1 focus:ring-accent-400"
+      >
+        {INTENSITY_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+
+      <div className="flex items-center gap-1">
+        <input
+          type="number"
+          value={dur}
+          onChange={(e) => setDur(e.target.value)}
+          onBlur={() => onUpdate({ duration_minutes: parseFloat(dur) || 0 })}
+          className="w-full bg-surface-200 border border-surface-400 rounded-lg px-1.5 py-1.5 text-sm text-center text-gray-100 focus:ring-1 focus:ring-accent-400"
+        />
+        <span className="text-[11px] text-gray-400 shrink-0">min</span>
+      </div>
+
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onUpdate({ is_completed: !set.is_completed })}
+          className={`${set.is_completed ? "text-accent-400" : "text-gray-600 hover:text-gray-400"}`}
+        >
+          {set.is_completed ? <IconCheckCircle size={20} /> : <IconCircle size={20} />}
+        </button>
+        <button onClick={onDelete} className="text-gray-600 active:text-red-400 hover:text-red-400 transition">
+          <IconTrash size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ExercisePickerModal({ onAdd, onClose }: { onAdd: (ids: number[]) => void; onClose: () => void }) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [showCreate, setShowCreate] = useState(false);
+  const [createCategory, setCreateCategory] = useState<ExerciseCategory>("push");
+  const [createError, setCreateError] = useState("");
 
   useEffect(() => { api.exercises.list().then(setExercises); }, []);
 
@@ -296,12 +369,27 @@ function ExercisePickerModal({ onAdd, onClose }: { onAdd: (ids: number[]) => voi
     return matchSearch && matchCat;
   });
 
+  const exactMatch = search.trim() && exercises.some((e) => e.name.toLowerCase() === search.trim().toLowerCase());
+
   function toggle(id: number) {
     setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  }
+
+  async function handleCreate() {
+    try {
+      const exercise = await api.exercises.create(search.trim(), createCategory);
+      setExercises((prev) => [...prev, exercise].sort((a, b) => a.name.localeCompare(b.name)));
+      setSelected((prev) => new Set(prev).add(exercise.id));
+      setSearch("");
+      setShowCreate(false);
+      setCreateError("");
+    } catch (err: unknown) {
+      setCreateError(err instanceof Error ? err.message : "Failed to create exercise");
+    }
   }
 
   return (
@@ -322,9 +410,9 @@ function ExercisePickerModal({ onAdd, onClose }: { onAdd: (ids: number[]) => voi
         <div className="px-4 py-2 border-b border-surface-300 shrink-0">
           <input
             type="text"
-            placeholder="Search exercises..."
+            placeholder="Search or create exercises..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setShowCreate(false); setCreateError(""); }}
             className="w-full bg-surface-200 border border-surface-400 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:ring-2 focus:ring-accent-400"
           />
         </div>
@@ -348,6 +436,39 @@ function ExercisePickerModal({ onAdd, onClose }: { onAdd: (ids: number[]) => voi
         </div>
 
         <div className="overflow-y-auto flex-1">
+          {search.trim() && !exactMatch && (
+            <div className="px-4 py-2 border-b border-surface-300">
+              {showCreate ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-400">Create "<span className="text-gray-100 font-medium">{search.trim()}</span>" as:</p>
+                  <select
+                    value={createCategory}
+                    onChange={(e) => setCreateCategory(e.target.value as ExerciseCategory)}
+                    className="w-full bg-surface-200 border border-surface-400 rounded-lg px-3 py-2 text-sm text-gray-100 focus:ring-1 focus:ring-accent-400"
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                  {createError && <p className="text-red-400 text-xs">{createError}</p>}
+                  <button
+                    onClick={handleCreate}
+                    className="w-full py-2 rounded-lg bg-accent-500 text-gray-900 text-sm font-semibold hover:bg-accent-400"
+                  >
+                    Create & Select
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="w-full py-2 rounded-lg text-accent-400 text-sm font-medium hover:bg-accent-500/10 inline-flex items-center justify-center gap-1"
+                >
+                  <IconPlus size={14} /> Create "{search.trim()}"
+                </button>
+              )}
+            </div>
+          )}
+
           {filtered.map((e) => (
             <button
               key={e.id}

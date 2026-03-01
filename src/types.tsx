@@ -32,6 +32,8 @@ export const CATEGORIES: { value: ExerciseCategory; label: string; icon: ReactNo
   { value: "fullBody", label: "Full Body", icon: <IconDumbbell size={14} /> },
 ];
 
+export type Intensity = "low" | "moderate" | "high" | "max";
+
 export interface ExerciseSet {
   id: number;
   entry_id: number;
@@ -40,6 +42,8 @@ export interface ExerciseSet {
   weight: number;
   unit: "kg" | "lbs";
   is_completed: number;
+  intensity: Intensity | null;
+  duration_minutes: number | null;
 }
 
 export interface WorkoutEntry {

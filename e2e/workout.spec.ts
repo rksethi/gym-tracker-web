@@ -23,7 +23,7 @@ test.describe("Workout Flow", () => {
     await page.getByRole("button", { name: /Add Exercise/ }).click();
     await expect(page.getByRole("heading", { name: "Add Exercises" })).toBeVisible();
 
-    await page.getByPlaceholder("Search exercises...").fill("Barbell Bench");
+    await page.getByPlaceholder("Search or create exercises...").fill("Barbell Bench");
     await page.getByText("Barbell Bench Press").first().click();
     await page.getByRole("button", { name: /Add \(1\)/ }).click();
 
