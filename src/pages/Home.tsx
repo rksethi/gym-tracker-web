@@ -33,12 +33,12 @@ export default function Home() {
       {/* Start Workout Card */}
       <button
         onClick={() => setShowPrompt(true)}
-        className="w-full bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-2xl p-6 text-left hover:from-accent-600 hover:to-accent-700 transition shadow-lg shadow-accent-200"
+        className="w-full bg-gradient-to-r from-accent-500 to-accent-400 text-gray-900 rounded-2xl p-6 text-left hover:from-accent-600 hover:to-accent-500 transition shadow-lg shadow-accent-500/20"
       >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold">Start Workout</h2>
-            <p className="text-accent-100 text-sm mt-1">Empty workout</p>
+            <p className="text-gray-800/70 text-sm mt-1">Empty workout</p>
           </div>
           <span className="text-3xl">＋</span>
         </div>
@@ -46,8 +46,8 @@ export default function Home() {
 
       {/* Name Prompt Modal */}
       {showPrompt && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-50 rounded-2xl p-6 w-full max-w-sm space-y-4 border border-surface-300">
             <h3 className="text-lg font-bold">Name Your Workout</h3>
             <input
               type="text"
@@ -56,18 +56,18 @@ export default function Home() {
               onChange={(e) => setWorkoutName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && startWorkout()}
               autoFocus
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-accent-500 focus:border-transparent"
+              className="w-full bg-surface-200 border border-surface-400 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder:text-gray-500 focus:ring-2 focus:ring-accent-500 focus:border-transparent"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowPrompt(false); setWorkoutName(""); setSelectedTemplateId(undefined); }}
-                className="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-medium hover:bg-gray-50"
+                className="flex-1 py-2.5 rounded-xl border border-surface-400 text-sm font-medium text-gray-300 hover:bg-surface-200"
               >
                 Cancel
               </button>
               <button
                 onClick={startWorkout}
-                className="flex-1 py-2.5 rounded-xl bg-accent-500 text-white text-sm font-bold hover:bg-accent-600"
+                className="flex-1 py-2.5 rounded-xl bg-accent-500 text-gray-900 text-sm font-bold hover:bg-accent-400"
               >
                 Start
               </button>
@@ -85,13 +85,13 @@ export default function Home() {
               <button
                 key={t.id}
                 onClick={() => { setSelectedTemplateId(t.id); setWorkoutName(t.name); setShowPrompt(true); }}
-                className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-accent-300 hover:shadow-sm transition text-left"
+                className="flex items-center justify-between p-4 bg-surface-50 rounded-xl border border-surface-300 hover:border-accent-500/40 hover:bg-surface-100 transition text-left"
               >
                 <div>
                   <p className="font-semibold text-sm">{t.name}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{t.exercises.length} exercises</p>
                 </div>
-                <span className="text-accent-500 text-xl">▶</span>
+                <span className="text-accent-400 text-xl">▶</span>
               </button>
             ))}
           </div>
@@ -102,7 +102,7 @@ export default function Home() {
       <section>
         <h2 className="text-lg font-bold mb-3">Recent Workouts</h2>
         {sessions.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-500">
             <p className="text-4xl mb-2">🏋️</p>
             <p className="text-sm">No workouts yet. Start your first one!</p>
           </div>
@@ -112,7 +112,7 @@ export default function Home() {
               <Link
                 key={s.id}
                 to={`/history/${s.id}`}
-                className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition"
+                className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-surface-50 rounded-xl border border-surface-300 hover:border-surface-400 hover:bg-surface-100 transition"
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-sm truncate">{s.name}</p>
@@ -122,7 +122,7 @@ export default function Home() {
                     <span>📊 {s.total_sets} sets</span>
                   </div>
                 </div>
-                <span className="text-xs text-gray-400 shrink-0">
+                <span className="text-xs text-gray-500 shrink-0">
                   {new Date(s.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                 </span>
               </Link>

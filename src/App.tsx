@@ -16,7 +16,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-400">
+      <div className="min-h-screen flex items-center justify-center text-gray-500 bg-[#0c0c0c]">
         <div className="text-center">
           <span className="text-4xl block mb-2">🏋️</span>
           <p className="text-sm">Loading...</p>

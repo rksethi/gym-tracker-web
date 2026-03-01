@@ -15,7 +15,7 @@ export default function SessionDetail() {
     if (id) api.sessions.get(Number(id)).then(setSession);
   }, [id]);
 
-  if (!session) return <div className="text-center py-16 text-gray-400">Loading...</div>;
+  if (!session) return <div className="text-center py-16 text-gray-500">Loading...</div>;
 
   const totalVolume = session.entries.reduce((sum, e) =>
     sum + e.sets.filter((s) => s.is_completed).reduce((s2, s) => s2 + s.weight * s.reps, 0), 0);
@@ -44,22 +44,21 @@ export default function SessionDetail() {
                 setSavedTemplate(true);
                 setTimeout(() => setSavedTemplate(false), 2000);
               }}
-              className="text-sm text-accent-600 hover:text-accent-700 font-medium"
+              className="text-sm text-accent-400 hover:text-accent-300 font-medium"
             >
               {savedTemplate ? "✅ Saved!" : "📋 Template"}
             </button>
           )}
           <button
             onClick={() => setShowDelete(true)}
-            className="text-sm text-red-500 hover:text-red-600 font-medium"
+            className="text-sm text-red-400 hover:text-red-300 font-medium"
           >
             Delete
           </button>
         </div>
       </div>
 
-      {/* Overview */}
-      <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+      <div className="bg-surface-50 rounded-xl border border-surface-300 divide-y divide-surface-300">
         <Row label="Date" value={new Date(session.date).toLocaleDateString(undefined, {
           weekday: "short", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
         })} />
@@ -70,33 +69,30 @@ export default function SessionDetail() {
         {maxHR > 0 && <Row label="Max Heart Rate" value={`❤️ ${maxHR} bpm`} />}
       </div>
 
-      {/* Exercises */}
       {session.entries.map((entry) => {
         const entryVolume = entry.sets.filter((s) => s.is_completed)
           .reduce((sum, s) => sum + s.weight * s.reps, 0);
 
         return (
-          <section key={entry.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-3 sm:px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
+          <section key={entry.id} className="bg-surface-50 rounded-xl border border-surface-300 overflow-hidden">
+            <div className="px-3 sm:px-4 py-3 border-b border-surface-300 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="shrink-0">{categoryIcon(entry.exercise_category)}</span>
                 <span className="font-semibold text-sm truncate">{entry.exercise_name}</span>
-                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0 hidden sm:inline">
+                <span className="text-xs text-gray-500 bg-surface-200 px-2 py-0.5 rounded-full shrink-0 hidden sm:inline">
                   {categoryLabel(entry.exercise_category)}
                 </span>
               </div>
               {entry.max_heart_rate && (
-                <span className="text-xs text-red-500 font-medium shrink-0">❤️ {entry.max_heart_rate} bpm</span>
+                <span className="text-xs text-red-400 font-medium shrink-0">❤️ {entry.max_heart_rate} bpm</span>
               )}
             </div>
 
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-surface-300">
               {entry.sets.map((s) => (
-                <div key={s.id} className={`px-3 sm:px-4 py-2 grid grid-cols-[2rem_1fr_1fr_2rem] sm:grid-cols-4 gap-1 text-sm ${s.is_completed ? "bg-green-50/50" : ""}`}>
-                  <span className="text-gray-400">{s.set_number}</span>
-                  <span className="text-center font-medium">
-                    {s.weight > 0 ? `${s.weight} ${s.unit}` : "—"}
-                  </span>
+                <div key={s.id} className={`px-3 sm:px-4 py-2 grid grid-cols-[2rem_1fr_1fr_2rem] sm:grid-cols-4 gap-1 text-sm ${s.is_completed ? "bg-accent-500/10" : ""}`}>
+                  <span className="text-gray-500">{s.set_number}</span>
+                  <span className="text-center font-medium">{s.weight > 0 ? `${s.weight} ${s.unit}` : "—"}</span>
                   <span className="text-center">{s.reps} reps</span>
                   <span className="text-right">{s.is_completed ? "✅" : "⭕"}</span>
                 </div>
@@ -104,23 +100,22 @@ export default function SessionDetail() {
             </div>
 
             {entryVolume > 0 && (
-              <div className="px-4 py-2 border-t border-gray-100 flex justify-between text-xs">
-                <span className="text-gray-400">Volume</span>
-                <span className="font-semibold text-accent-600">{entryVolume.toFixed(1)} lbs</span>
+              <div className="px-4 py-2 border-t border-surface-300 flex justify-between text-xs">
+                <span className="text-gray-500">Volume</span>
+                <span className="font-semibold text-accent-400">{entryVolume.toFixed(1)} lbs</span>
               </div>
             )}
           </section>
         );
       })}
 
-      {/* Delete Modal */}
       {showDelete && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-xs space-y-4 text-center">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-50 rounded-2xl p-6 w-full max-w-xs space-y-4 text-center border border-surface-300">
             <h3 className="text-lg font-bold">Delete Workout?</h3>
-            <p className="text-sm text-gray-500">This action cannot be undone.</p>
+            <p className="text-sm text-gray-400">This action cannot be undone.</p>
             <div className="flex gap-3">
-              <button onClick={() => setShowDelete(false)} className="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-medium hover:bg-gray-50">Cancel</button>
+              <button onClick={() => setShowDelete(false)} className="flex-1 py-2.5 rounded-xl border border-surface-400 text-sm font-medium text-gray-300 hover:bg-surface-200">Cancel</button>
               <button onClick={handleDelete} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600">Delete</button>
             </div>
           </div>

@@ -27,34 +27,34 @@ export default function Templates() {
         <h1 className="text-2xl font-bold">Workout Templates</h1>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-3 py-2 rounded-xl bg-accent-500 text-white text-sm font-medium hover:bg-accent-600 transition"
+          className="px-3 py-2 rounded-xl bg-accent-500 text-gray-900 text-sm font-medium hover:bg-accent-400 transition"
         >
           ＋ New Template
         </button>
       </div>
 
       {templates.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-gray-500">
           <p className="text-4xl mb-2">📋</p>
           <p className="text-sm">Create a workout template to quickly start workouts.</p>
         </div>
       ) : (
         <div className="grid gap-3">
           {templates.map((t) => (
-            <div key={t.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div key={t.id} className="bg-surface-50 rounded-xl border border-surface-300 overflow-hidden">
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold">{t.name}</h3>
                   <div className="flex gap-2">
                     <button
                       onClick={() => startFromTemplate(t)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-accent-500 text-white font-medium hover:bg-accent-600"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-accent-500 text-gray-900 font-medium hover:bg-accent-400"
                     >
                       ▶ Start
                     </button>
                     <button
                       onClick={() => deleteTemplate(t.id)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-surface-400 text-gray-400 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30"
                     >
                       Delete
                     </button>
@@ -63,7 +63,7 @@ export default function Templates() {
                 <p className="text-xs text-gray-500 mb-3">{t.exercises.length} exercises</p>
                 <div className="flex flex-wrap gap-2">
                   {t.exercises.map((e) => (
-                    <span key={e.id} className="text-xs bg-gray-100 px-2 py-1 rounded-lg flex items-center gap-1">
+                    <span key={e.id} className="text-xs bg-surface-200 text-gray-300 px-2 py-1 rounded-lg flex items-center gap-1">
                       {categoryIcon(e.category)} {e.name}
                     </span>
                   ))}
@@ -77,27 +77,14 @@ export default function Templates() {
       {showCreate && (
         <CreateTemplateModal
           onClose={() => setShowCreate(false)}
-          onCreated={(t) => {
-            setTemplates((prev) => [...prev, t]);
-            setShowCreate(false);
-          }}
+          onCreated={(t) => { setTemplates((prev) => [...prev, t]); setShowCreate(false); }}
         />
       )}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Create Template Modal
-// ---------------------------------------------------------------------------
-
-function CreateTemplateModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: (t: WorkoutTemplate) => void;
-}) {
+function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (t: WorkoutTemplate) => void }) {
   const [name, setName] = useState("");
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [allExercises, setAllExercises] = useState<Exercise[]>([]);
@@ -135,25 +122,17 @@ function CreateTemplateModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 overflow-hidden">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0">
-          <button onClick={onClose} className="text-sm text-gray-500">Cancel</button>
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 overflow-hidden">
+      <div className="bg-surface rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] flex flex-col overflow-hidden border-t border-surface-300 sm:border">
+        <div className="px-4 py-3 border-b border-surface-300 flex items-center justify-between shrink-0">
+          <button onClick={onClose} className="text-sm text-gray-400">Cancel</button>
           <h3 className="font-bold text-sm">New Template</h3>
           {step === "name" ? (
-            <button
-              onClick={() => setStep("exercises")}
-              disabled={!name.trim()}
-              className="text-sm font-bold text-accent-600 disabled:opacity-30"
-            >
+            <button onClick={() => setStep("exercises")} disabled={!name.trim()} className="text-sm font-bold text-accent-400 disabled:opacity-30">
               Next
             </button>
           ) : (
-            <button
-              onClick={save}
-              disabled={selected.size === 0}
-              className="text-sm font-bold text-accent-600 disabled:opacity-30"
-            >
+            <button onClick={save} disabled={selected.size === 0} className="text-sm font-bold text-accent-400 disabled:opacity-30">
               Save
             </button>
           )}
@@ -161,23 +140,21 @@ function CreateTemplateModal({
 
         {step === "name" ? (
           <div className="p-6">
-            <label className="text-sm font-medium text-gray-700 mb-2 block">Template Name</label>
+            <label className="text-sm font-medium text-gray-400 mb-2 block">Template Name</label>
             <input
               type="text"
               placeholder="e.g. Push Day"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-accent-500"
+              className="w-full bg-surface-200 border border-surface-400 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder:text-gray-500 focus:ring-2 focus:ring-accent-500"
             />
             {exercises.length > 0 && (
               <div className="mt-4">
                 <p className="text-xs text-gray-500 mb-2">{exercises.length} exercises selected</p>
                 <div className="flex flex-wrap gap-2">
                   {exercises.map((e) => (
-                    <span key={e.id} className="text-xs bg-accent-50 text-accent-700 px-2 py-1 rounded-lg">
-                      {e.name}
-                    </span>
+                    <span key={e.id} className="text-xs bg-accent-500/15 text-accent-400 px-2 py-1 rounded-lg">{e.name}</span>
                   ))}
                 </div>
               </div>
@@ -185,19 +162,19 @@ function CreateTemplateModal({
           </div>
         ) : (
           <>
-            <div className="px-4 py-2 border-b border-gray-100 shrink-0">
+            <div className="px-4 py-2 border-b border-surface-300 shrink-0">
               <input
                 type="text"
                 placeholder="Search exercises..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400"
+                className="w-full bg-surface-200 border border-surface-400 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:ring-2 focus:ring-accent-400"
               />
             </div>
-            <div className="px-4 py-2 flex gap-2 overflow-x-auto border-b border-gray-100 shrink-0">
+            <div className="px-4 py-2 flex gap-2 overflow-x-auto border-b border-surface-300 shrink-0">
               <button
                 onClick={() => setSelectedCategory("")}
-                className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${!selectedCategory ? "bg-accent-500 text-white" : "bg-gray-100"}`}
+                className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${!selectedCategory ? "bg-accent-500 text-gray-900" : "bg-surface-200 text-gray-400"}`}
               >
                 All
               </button>
@@ -205,7 +182,7 @@ function CreateTemplateModal({
                 <button
                   key={c.value}
                   onClick={() => setSelectedCategory(c.value)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${selectedCategory === c.value ? "bg-accent-500 text-white" : "bg-gray-100"}`}
+                  className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${selectedCategory === c.value ? "bg-accent-500 text-gray-900" : "bg-surface-200 text-gray-400"}`}
                 >
                   {c.icon} {c.label}
                 </button>
@@ -216,7 +193,7 @@ function CreateTemplateModal({
                 <button
                   key={e.id}
                   onClick={() => toggleExercise(e)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 border-b border-gray-50 ${selected.has(e.id) ? "bg-accent-50" : ""}`}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-100 border-b border-surface-300/50 ${selected.has(e.id) ? "bg-accent-500/10" : ""}`}
                 >
                   <span>{categoryIcon(e.category)}</span>
                   <span className="text-sm flex-1">{e.name}</span>

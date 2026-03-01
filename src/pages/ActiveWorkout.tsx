@@ -74,18 +74,18 @@ export default function ActiveWorkout() {
     navigate("/");
   }
 
-  if (!session) return <div className="flex items-center justify-center h-screen text-gray-400">Loading...</div>;
+  if (!session) return <div className="flex items-center justify-center h-screen text-gray-500">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-[100vw] overflow-x-clip">
+    <div className="min-h-screen bg-[#0c0c0c] max-w-[100vw] overflow-x-clip">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+      <header className="bg-surface border-b border-surface-300 sticky top-0 z-30">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <button onClick={() => setShowDiscard(true)} className="text-red-500 text-sm font-medium">Discard</button>
+          <button onClick={() => setShowDiscard(true)} className="text-red-400 text-sm font-medium">Discard</button>
           <div className="text-center">
-            <p className="text-2xl font-bold font-mono text-accent-600">{formatDuration(elapsed)}</p>
+            <p className="text-2xl font-bold font-mono text-accent-400">{formatDuration(elapsed)}</p>
           </div>
-          <button onClick={() => setShowFinish(true)} className="text-accent-600 text-sm font-bold">Finish</button>
+          <button onClick={() => setShowFinish(true)} className="text-accent-400 text-sm font-bold">Finish</button>
         </div>
       </header>
 
@@ -98,12 +98,12 @@ export default function ActiveWorkout() {
             setSession({ ...session, name: e.target.value });
             api.sessions.update(Number(id), { name: e.target.value });
           }}
-          className="w-full text-lg font-semibold bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-accent-500"
+          className="w-full text-lg font-semibold bg-surface-50 border border-surface-300 rounded-xl px-4 py-3 text-gray-100 focus:ring-2 focus:ring-accent-500"
         />
 
         {/* Exercise Entries */}
         {session.entries.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-gray-500">
             <p className="text-4xl mb-2">🏋️</p>
             <p className="text-sm">Add exercises to start logging sets</p>
           </div>
@@ -124,7 +124,7 @@ export default function ActiveWorkout() {
         {/* Add Exercise Button */}
         <button
           onClick={() => setShowAddExercise(true)}
-          className="w-full py-3 rounded-xl bg-accent-50 text-accent-600 font-semibold text-sm hover:bg-accent-100 transition border border-accent-200"
+          className="w-full py-3 rounded-xl bg-accent-500/15 text-accent-400 font-semibold text-sm hover:bg-accent-500/25 transition border border-accent-500/30"
         >
           ＋ Add Exercise
         </button>
@@ -138,22 +138,17 @@ export default function ActiveWorkout() {
               setSavedTemplate(true);
               setTimeout(() => setSavedTemplate(false), 2000);
             }}
-            className="w-full py-3 rounded-xl text-gray-500 font-medium text-sm hover:bg-gray-100 transition border border-gray-200"
+            className="w-full py-3 rounded-xl text-gray-500 font-medium text-sm hover:bg-surface-100 transition border border-surface-300"
           >
             {savedTemplate ? "✅ Template Saved!" : "📋 Save as Template"}
           </button>
         )}
       </div>
 
-      {/* Add Exercise Modal */}
       {showAddExercise && (
-        <ExercisePickerModal
-          onAdd={addExercises}
-          onClose={() => setShowAddExercise(false)}
-        />
+        <ExercisePickerModal onAdd={addExercises} onClose={() => setShowAddExercise(false)} />
       )}
 
-      {/* Discard Modal */}
       {showDiscard && (
         <ConfirmModal
           title="Discard Workout?"
@@ -165,13 +160,12 @@ export default function ActiveWorkout() {
         />
       )}
 
-      {/* Finish Modal */}
       {showFinish && (
         <ConfirmModal
           title="Finish Workout?"
           message={`Save this workout with ${session.entries.length} exercises?`}
           confirmLabel="Finish"
-          confirmClass="bg-accent-500 hover:bg-accent-600"
+          confirmClass="bg-accent-500 hover:bg-accent-400 text-gray-900"
           onConfirm={finishWorkout}
           onCancel={() => setShowFinish(false)}
         />
@@ -180,17 +174,8 @@ export default function ActiveWorkout() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Entry Card
-// ---------------------------------------------------------------------------
-
 function EntryCard({
-  entry,
-  onRemove,
-  onAddSet,
-  onUpdateSet,
-  onDeleteSet,
-  onUpdateHeartRate,
+  entry, onRemove, onAddSet, onUpdateSet, onDeleteSet, onUpdateHeartRate,
 }: {
   entry: WorkoutEntry;
   onRemove: () => void;
@@ -202,74 +187,50 @@ function EntryCard({
   const [hrValue, setHrValue] = useState(entry.max_heart_rate?.toString() ?? "");
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      {/* Header */}
-      <div className="px-3 sm:px-4 py-3 flex items-center justify-between border-b border-gray-100 gap-2">
+    <div className="bg-surface-50 rounded-xl border border-surface-300 overflow-hidden">
+      <div className="px-3 sm:px-4 py-3 flex items-center justify-between border-b border-surface-300 gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="shrink-0">{categoryIcon(entry.exercise_category)}</span>
           <span className="font-semibold text-sm truncate">{entry.exercise_name}</span>
-          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full shrink-0 hidden sm:inline">
+          <span className="text-xs text-gray-500 bg-surface-200 px-2 py-0.5 rounded-full shrink-0 hidden sm:inline">
             {categoryLabel(entry.exercise_category)}
           </span>
         </div>
-        <button onClick={onRemove} className="text-gray-400 hover:text-red-500 text-lg shrink-0">×</button>
+        <button onClick={onRemove} className="text-gray-500 hover:text-red-400 text-lg shrink-0">×</button>
       </div>
 
-      {/* Heart Rate */}
-      <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
-        <span className="text-red-500 text-sm">❤️</span>
+      <div className="px-4 py-2 border-b border-surface-300 flex items-center gap-2">
+        <span className="text-red-400 text-sm">❤️</span>
         <input
           type="number"
           placeholder="Max HR (optional)"
           value={hrValue}
           onChange={(e) => setHrValue(e.target.value)}
-          onBlur={() => {
-            const val = hrValue ? parseInt(hrValue, 10) : null;
-            onUpdateHeartRate(val);
-          }}
-          className="text-sm border-0 bg-transparent focus:ring-0 w-36 p-0 placeholder:text-gray-300"
+          onBlur={() => onUpdateHeartRate(hrValue ? parseInt(hrValue, 10) : null)}
+          className="text-sm border-0 bg-transparent focus:ring-0 w-36 p-0 text-gray-100 placeholder:text-gray-600"
         />
-        {hrValue && <span className="text-xs text-gray-400">bpm</span>}
+        {hrValue && <span className="text-xs text-gray-500">bpm</span>}
       </div>
 
-      {/* Set Header */}
-      <div className="px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_3.5rem_3.5rem] sm:grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-1.5 sm:gap-2 text-xs font-semibold text-gray-400 uppercase">
+      <div className="px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_3.5rem_3.5rem] sm:grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-1.5 sm:gap-2 text-xs font-semibold text-gray-500 uppercase">
         <span>#</span>
         <span className="text-center">Weight</span>
         <span className="text-center">Reps</span>
         <span></span>
       </div>
 
-      {/* Sets */}
       {entry.sets.map((s) => (
-        <SetRow
-          key={s.id}
-          set={s}
-          onUpdate={(data) => onUpdateSet(s.id, data)}
-          onDelete={() => onDeleteSet(s.id)}
-        />
+        <SetRow key={s.id} set={s} onUpdate={(data) => onUpdateSet(s.id, data)} onDelete={() => onDeleteSet(s.id)} />
       ))}
 
-      {/* Add Set */}
-      <button
-        onClick={onAddSet}
-        className="w-full py-2.5 text-sm font-medium text-accent-600 hover:bg-accent-50 transition"
-      >
+      <button onClick={onAddSet} className="w-full py-2.5 text-sm font-medium text-accent-400 hover:bg-accent-500/10 transition">
         ＋ Add Set
       </button>
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Set Row
-// ---------------------------------------------------------------------------
-
-function SetRow({
-  set,
-  onUpdate,
-  onDelete,
-}: {
+function SetRow({ set, onUpdate, onDelete }: {
   set: ExerciseSet;
   onUpdate: (data: Partial<ExerciseSet>) => void;
   onDelete: () => void;
@@ -278,8 +239,8 @@ function SetRow({
   const [reps, setReps] = useState(set.reps.toString());
 
   return (
-    <div className={`px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_3.5rem_3.5rem] sm:grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-1.5 sm:gap-2 items-center border-t border-gray-50 ${set.is_completed ? "bg-green-50/50" : ""}`}>
-      <span className="text-sm font-medium text-gray-400">{set.set_number}</span>
+    <div className={`px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_3.5rem_3.5rem] sm:grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-1.5 sm:gap-2 items-center border-t border-surface-300 ${set.is_completed ? "bg-accent-500/10" : ""}`}>
+      <span className="text-sm font-medium text-gray-500">{set.set_number}</span>
 
       <div className="flex items-center gap-1">
         <input
@@ -287,11 +248,11 @@ function SetRow({
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           onBlur={() => onUpdate({ weight: parseFloat(weight) || 0 })}
-          className="w-full border border-gray-200 rounded-lg px-1.5 py-1.5 text-sm text-center focus:ring-1 focus:ring-accent-400"
+          className="w-full bg-surface-200 border border-surface-400 rounded-lg px-1.5 py-1.5 text-sm text-center text-gray-100 focus:ring-1 focus:ring-accent-400"
         />
         <button
           onClick={() => onUpdate({ unit: set.unit === "lbs" ? "kg" : "lbs" })}
-          className="text-[11px] font-semibold text-gray-400 bg-gray-100 rounded px-1 py-1 hover:bg-gray-200 shrink-0"
+          className="text-[11px] font-semibold text-gray-400 bg-surface-300 rounded px-1 py-1 hover:bg-surface-400 shrink-0"
         >
           {set.unit}
         </button>
@@ -302,20 +263,17 @@ function SetRow({
         value={reps}
         onChange={(e) => setReps(e.target.value)}
         onBlur={() => onUpdate({ reps: parseInt(reps, 10) || 0 })}
-        className="border border-gray-200 rounded-lg px-1.5 py-1.5 text-sm text-center focus:ring-1 focus:ring-accent-400"
+        className="bg-surface-200 border border-surface-400 rounded-lg px-1.5 py-1.5 text-sm text-center text-gray-100 focus:ring-1 focus:ring-accent-400"
       />
 
       <div className="flex items-center gap-1">
         <button
           onClick={() => onUpdate({ is_completed: !set.is_completed })}
-          className={`text-lg ${set.is_completed ? "text-green-500" : "text-gray-300 hover:text-gray-400"}`}
+          className={`text-lg ${set.is_completed ? "text-accent-400" : "text-gray-600 hover:text-gray-400"}`}
         >
           {set.is_completed ? "✅" : "⭕"}
         </button>
-        <button
-          onClick={onDelete}
-          className="text-gray-300 active:text-red-400 hover:text-red-400 text-xs transition"
-        >
+        <button onClick={onDelete} className="text-gray-600 active:text-red-400 hover:text-red-400 text-xs transition">
           🗑
         </button>
       </div>
@@ -323,17 +281,7 @@ function SetRow({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Exercise Picker Modal
-// ---------------------------------------------------------------------------
-
-function ExercisePickerModal({
-  onAdd,
-  onClose,
-}: {
-  onAdd: (ids: number[]) => void;
-  onClose: () => void;
-}) {
+function ExercisePickerModal({ onAdd, onClose }: { onAdd: (ids: number[]) => void; onClose: () => void }) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -356,37 +304,34 @@ function ExercisePickerModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 overflow-hidden">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0">
-          <button onClick={onClose} className="text-sm text-gray-500">Cancel</button>
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 overflow-hidden">
+      <div className="bg-surface rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] flex flex-col overflow-hidden border-t border-surface-300 sm:border">
+        <div className="px-4 py-3 border-b border-surface-300 flex items-center justify-between shrink-0">
+          <button onClick={onClose} className="text-sm text-gray-400">Cancel</button>
           <h3 className="font-bold text-sm">Add Exercises</h3>
           <button
             onClick={() => onAdd(Array.from(selected))}
             disabled={selected.size === 0}
-            className="text-sm font-bold text-accent-600 disabled:opacity-30"
+            className="text-sm font-bold text-accent-400 disabled:opacity-30"
           >
             Add ({selected.size})
           </button>
         </div>
 
-        {/* Search */}
-        <div className="px-4 py-2 border-b border-gray-100 shrink-0">
+        <div className="px-4 py-2 border-b border-surface-300 shrink-0">
           <input
             type="text"
             placeholder="Search exercises..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-400"
+            className="w-full bg-surface-200 border border-surface-400 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:ring-2 focus:ring-accent-400"
           />
         </div>
 
-        {/* Category filter */}
-        <div className="px-4 py-2 flex gap-2 overflow-x-auto border-b border-gray-100 shrink-0">
+        <div className="px-4 py-2 flex gap-2 overflow-x-auto border-b border-surface-300 shrink-0">
           <button
             onClick={() => setSelectedCategory("")}
-            className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${!selectedCategory ? "bg-accent-500 text-white" : "bg-gray-100 text-gray-600"}`}
+            className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${!selectedCategory ? "bg-accent-500 text-gray-900" : "bg-surface-200 text-gray-400"}`}
           >
             All
           </button>
@@ -394,20 +339,19 @@ function ExercisePickerModal({
             <button
               key={c.value}
               onClick={() => setSelectedCategory(c.value)}
-              className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${selectedCategory === c.value ? "bg-accent-500 text-white" : "bg-gray-100 text-gray-600"}`}
+              className={`px-3 py-1 rounded-full text-xs font-medium shrink-0 ${selectedCategory === c.value ? "bg-accent-500 text-gray-900" : "bg-surface-200 text-gray-400"}`}
             >
               {c.icon} {c.label}
             </button>
           ))}
         </div>
 
-        {/* List */}
         <div className="overflow-y-auto flex-1">
           {filtered.map((e) => (
             <button
               key={e.id}
               onClick={() => toggle(e.id)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 border-b border-gray-50 ${selected.has(e.id) ? "bg-accent-50" : ""}`}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-100 border-b border-surface-300/50 ${selected.has(e.id) ? "bg-accent-500/10" : ""}`}
             >
               <span>{categoryIcon(e.category)}</span>
               <span className="text-sm flex-1">{e.name}</span>
@@ -420,32 +364,16 @@ function ExercisePickerModal({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Confirm Modal
-// ---------------------------------------------------------------------------
-
-function ConfirmModal({
-  title,
-  message,
-  confirmLabel,
-  confirmClass,
-  onConfirm,
-  onCancel,
-}: {
-  title: string;
-  message: string;
-  confirmLabel: string;
-  confirmClass: string;
-  onConfirm: () => void;
-  onCancel: () => void;
+function ConfirmModal({ title, message, confirmLabel, confirmClass, onConfirm, onCancel }: {
+  title: string; message: string; confirmLabel: string; confirmClass: string; onConfirm: () => void; onCancel: () => void;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-xs space-y-4 text-center">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-surface-50 rounded-2xl p-6 w-full max-w-xs space-y-4 text-center border border-surface-300">
         <h3 className="text-lg font-bold">{title}</h3>
-        <p className="text-sm text-gray-500">{message}</p>
+        <p className="text-sm text-gray-400">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm font-medium hover:bg-gray-50">
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl border border-surface-400 text-sm font-medium text-gray-300 hover:bg-surface-200">
             Cancel
           </button>
           <button onClick={onConfirm} className={`flex-1 py-2.5 rounded-xl text-white text-sm font-bold ${confirmClass}`}>
