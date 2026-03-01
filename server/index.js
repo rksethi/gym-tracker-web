@@ -147,7 +147,7 @@ function optionalNumber(val, fieldName, min = 0, max = 100000) {
 
 function validateEmail(email) {
   const trimmed = requireString(email, "email", 254);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) throw new ValidationError("Invalid email address");
+  if (!/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(trimmed)) throw new ValidationError("Invalid email address");
   return trimmed.toLowerCase();
 }
 
