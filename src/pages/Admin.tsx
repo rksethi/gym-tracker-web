@@ -23,7 +23,7 @@ function codeStatus(code: InviteCode): { label: string; color: string } {
 }
 
 async function apiRequest<T>(url: string, opts?: RequestInit): Promise<T> {
-  const res = await fetch(url, { headers: { "Content-Type": "application/json" }, ...opts });
+  const res = await fetch(url, { headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" }, ...opts });
   if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.error || `Request failed: ${res.status}`); }
   return res.json();
 }

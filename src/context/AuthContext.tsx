@@ -20,10 +20,12 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+const XHR_HEADER = { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" };
+
 async function authRequest(url: string, body?: object): Promise<User> {
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: XHR_HEADER,
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -56,10 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
+    await fetch("/api/auth/logout", { method: "POST", headers: XHR_HEADER });
     setUser(null);
   }, []);
 

@@ -9,7 +9,9 @@
     "build": "vite build",
     "start": "NODE_ENV=production node server/index.js",
     "test:e2e": "npx playwright test",
-    "test": "npx playwright test"
+    "test": "npx playwright test",
+    "audit:security": "npm audit --omit=dev",
+    "prestart": "npm run audit:security || true"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

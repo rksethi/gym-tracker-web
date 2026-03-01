@@ -39,10 +39,15 @@ app.use(
         connectSrc: ["'self'"],
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
         frameAncestors: ["'none'"],
+        upgradeInsecureRequests: [],
       },
     },
     crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin" },
+    crossOriginResourcePolicy: { policy: "same-origin" },
     frameguard: { action: "deny" },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
     noSniff: true,
@@ -72,11 +77,23 @@ const loginLimiter = SKIP_RATE_LIMIT ? (_req, _res, next) => next() : rateLimit(
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
+// T2139: Prevent caching of API responses containing sensitive data
+app.use("/api", (_req, res, next) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.set("Pragma", "no-cache");
+  next();
+});
+
+// T29: CSRF protection — require X-Requested-With header on state-changing requests
+// Combined with SameSite=strict cookies, this blocks cross-origin form submissions
 app.use((req, res, next) => {
-  if (["POST", "PUT", "PATCH"].includes(req.method) && req.path.startsWith("/api")) {
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method) && req.path.startsWith("/api")) {
     const ct = req.headers["content-type"] || "";
     if (!ct.includes("application/json")) {
       return res.status(415).json({ error: "Content-Type must be application/json" });
+    }
+    if (!req.headers["x-requested-with"]) {
+      return res.status(403).json({ error: "Missing X-Requested-With header" });
     }
   }
   next();
@@ -290,7 +307,7 @@ function requireSessionOwner(req, res, next) {
 // Auth routes (public — no requireAuth)
 // ---------------------------------------------------------------------------
 
-app.post("/api/auth/register", async (req, res) => {
+app.post("/api/auth/register", loginLimiter, async (req, res) => {
   const email = validateEmail(req.body.email);
   const password = validatePassword(req.body.password);
   const code = requireString(req.body.inviteCode, "invite code", 20);
