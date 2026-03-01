@@ -85,7 +85,7 @@ export default function ActiveWorkout() {
   if (!session) return <div className="flex items-center justify-center h-screen text-gray-500">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0c0c0c] max-w-[100vw] overflow-x-clip">
+    <div className="min-h-screen bg-[#0c0c0c] max-w-[100vw] overflow-x-hidden">
       {/* Header */}
       <header className="bg-surface border-b border-surface-300 sticky top-0 z-30">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
