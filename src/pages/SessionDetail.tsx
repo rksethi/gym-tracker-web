@@ -9,6 +9,7 @@ export default function SessionDetail() {
   const navigate = useNavigate();
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [showDelete, setShowDelete] = useState(false);
+  const [savedTemplate, setSavedTemplate] = useState(false);
 
   useEffect(() => {
     if (id) api.sessions.get(Number(id)).then(setSession);
@@ -32,14 +33,29 @@ export default function SessionDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{session.name}</h1>
-        <button
-          onClick={() => setShowDelete(true)}
-          className="text-sm text-red-500 hover:text-red-600 font-medium"
-        >
-          Delete
-        </button>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold truncate">{session.name}</h1>
+        <div className="flex gap-2 shrink-0">
+          {session.entries.length > 0 && (
+            <button
+              onClick={async () => {
+                const ids = session.entries.map((e) => e.exercise_id);
+                await api.templates.create(session.name, ids);
+                setSavedTemplate(true);
+                setTimeout(() => setSavedTemplate(false), 2000);
+              }}
+              className="text-sm text-accent-600 hover:text-accent-700 font-medium"
+            >
+              {savedTemplate ? "✅ Saved!" : "📋 Template"}
+            </button>
+          )}
+          <button
+            onClick={() => setShowDelete(true)}
+            className="text-sm text-red-500 hover:text-red-600 font-medium"
+          >
+            Delete
+          </button>
+        </div>
       </div>
 
       {/* Overview */}

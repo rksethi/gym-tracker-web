@@ -12,6 +12,7 @@ export default function ActiveWorkout() {
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
   const [showFinish, setShowFinish] = useState(false);
+  const [savedTemplate, setSavedTemplate] = useState(false);
   const startRef = useRef(Date.now());
 
   const fetchSession = useCallback(async () => {
@@ -127,6 +128,21 @@ export default function ActiveWorkout() {
         >
           ＋ Add Exercise
         </button>
+
+        {/* Save as Template */}
+        {session.entries.length > 0 && (
+          <button
+            onClick={async () => {
+              const ids = session.entries.map((e) => e.exercise_id);
+              await api.templates.create(session.name, ids);
+              setSavedTemplate(true);
+              setTimeout(() => setSavedTemplate(false), 2000);
+            }}
+            className="w-full py-3 rounded-xl text-gray-500 font-medium text-sm hover:bg-gray-100 transition border border-gray-200"
+          >
+            {savedTemplate ? "✅ Template Saved!" : "📋 Save as Template"}
+          </button>
+        )}
       </div>
 
       {/* Add Exercise Modal */}
