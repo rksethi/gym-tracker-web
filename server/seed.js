@@ -47,7 +47,9 @@ const PRESET_EXERCISES = [
   ["Ab Rollout", "core"], ["Cable Crunch", "core"],
   ["Dead Bug", "core"], ["V-Up", "core"],
   ["Side Plank", "core"], ["Pallof Press", "core"],
-  // Cardio (5)
+  // Cardio (10)
+  ["Running", "cardio"], ["Walking", "cardio"], ["Cycling", "cardio"],
+  ["Swimming", "cardio"], ["Rowing", "cardio"],
   ["Treadmill Running", "cardio"], ["Stationary Bike", "cardio"],
   ["Rowing Machine", "cardio"], ["Jump Rope", "cardio"], ["Stair Climber", "cardio"],
   // Full Body (5)
@@ -57,17 +59,19 @@ const PRESET_EXERCISES = [
 ];
 
 function seedExercises(db) {
-  const count = db.prepare("SELECT COUNT(*) as c FROM exercises WHERE is_custom = 0").get();
-  if (count.c > 0) return;
-
-  const insert = db.prepare("INSERT OR IGNORE INTO exercises (name, category, is_custom) VALUES (?, ?, 0)");
+  const exists = db.prepare("SELECT 1 FROM exercises WHERE name = ? AND user_id IS NULL");
+  const insert = db.prepare("INSERT INTO exercises (name, category, is_custom) VALUES (?, ?, 0)");
   const tx = db.transaction(() => {
+    let added = 0;
     for (const [name, category] of PRESET_EXERCISES) {
-      insert.run(name, category);
+      if (!exists.get(name)) {
+        insert.run(name, category);
+        added++;
+      }
     }
+    if (added > 0) console.log(`Seeded ${added} preset exercises`);
   });
   tx();
-  console.log(`Seeded ${PRESET_EXERCISES.length} preset exercises`);
 }
 
 module.exports = { seedExercises };
