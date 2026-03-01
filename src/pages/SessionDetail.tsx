@@ -18,11 +18,17 @@ export default function SessionDetail() {
 
   if (!session) return <div className="text-center py-16 text-gray-500">Loading...</div>;
 
-  const totalVolume = session.entries.reduce((sum, e) =>
+  const strengthEntries = session.entries.filter((e) => e.exercise_category !== "cardio");
+  const cardioEntries = session.entries.filter((e) => e.exercise_category === "cardio");
+
+  const totalVolume = strengthEntries.reduce((sum, e) =>
     sum + e.sets.filter((s) => s.is_completed).reduce((s2, s) => s2 + s.weight * s.reps, 0), 0);
 
   const totalSets = session.entries.reduce((sum, e) =>
     sum + e.sets.filter((s) => s.is_completed).length, 0);
+
+  const totalCardioDuration = cardioEntries.reduce((sum, e) =>
+    sum + e.sets.filter((s) => s.is_completed).reduce((s2, s) => s2 + (s.duration_minutes ?? 0), 0), 0);
 
   const maxHR = Math.max(0, ...session.entries.map((e) => e.max_heart_rate ?? 0));
 
@@ -66,13 +72,17 @@ export default function SessionDetail() {
         <Row label="Duration" value={formatDuration(session.duration)} />
         <Row label="Exercises" value={session.entries.length.toString()} />
         <Row label="Total Sets" value={totalSets.toString()} />
-        <Row label="Total Volume" value={`${totalVolume.toFixed(1)} lbs`} />
+        {totalVolume > 0 && <Row label="Total Volume" value={`${totalVolume.toFixed(1)} lbs`} />}
+        {totalCardioDuration > 0 && <Row label="Cardio Time" value={`${totalCardioDuration} min`} />}
         {maxHR > 0 && <Row label="Max Heart Rate" value={`${maxHR} bpm`} icon={<IconHeart size={14} className="text-red-400 inline" />} />}
       </div>
 
       {session.entries.map((entry) => {
-        const entryVolume = entry.sets.filter((s) => s.is_completed)
+        const isCardio = entry.exercise_category === "cardio";
+        const entryVolume = isCardio ? 0 : entry.sets.filter((s) => s.is_completed)
           .reduce((sum, s) => sum + s.weight * s.reps, 0);
+        const entryDuration = isCardio ? entry.sets.filter((s) => s.is_completed)
+          .reduce((sum, s) => sum + (s.duration_minutes ?? 0), 0) : 0;
 
         return (
           <section key={entry.id} className="bg-surface-50 rounded-xl border border-surface-300 overflow-hidden">
@@ -95,9 +105,11 @@ export default function SessionDetail() {
               {entry.sets.map((s) => (
                 <div key={s.id} className={`px-3 sm:px-4 py-2 grid grid-cols-[2rem_1fr_1fr_2rem] sm:grid-cols-4 gap-1 text-sm ${s.is_completed ? "bg-accent-500/10" : ""}`}>
                   <span className="text-gray-500">{s.set_number}</span>
-                  {entry.exercise_category === "cardio" ? (
+                  {isCardio ? (
                     <>
-                      <span className="text-center font-medium capitalize">{s.intensity ?? "—"}</span>
+                      <span className="text-center font-medium">
+                        {(s.intensity ?? 0) > 0 ? `${s.intensity} ${s.intensity_unit ?? ""}`.trim() : "—"}
+                      </span>
                       <span className="text-center">{(s.duration_minutes ?? 0) > 0 ? `${s.duration_minutes} min` : "—"}</span>
                     </>
                   ) : (
@@ -117,6 +129,12 @@ export default function SessionDetail() {
               <div className="px-4 py-2 border-t border-surface-300 flex justify-between text-xs">
                 <span className="text-gray-500">Volume</span>
                 <span className="font-semibold text-accent-400">{entryVolume.toFixed(1)} lbs</span>
+              </div>
+            )}
+            {entryDuration > 0 && (
+              <div className="px-4 py-2 border-t border-surface-300 flex justify-between text-xs">
+                <span className="text-gray-500">Duration</span>
+                <span className="font-semibold text-accent-400">{entryDuration} min</span>
               </div>
             )}
           </section>

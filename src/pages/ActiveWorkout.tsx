@@ -1,16 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
-import type { Exercise, ExerciseCategory, ExerciseSet, Intensity, WorkoutEntry, WorkoutSession } from "../types";
+import type { Exercise, ExerciseCategory, ExerciseSet, WorkoutEntry, WorkoutSession } from "../types";
 import { categoryIcon, categoryLabel, CATEGORIES, formatDuration } from "../types";
-import { IconDumbbell, IconPlus, IconCheckCircle, IconCircle, IconTrash, IconHeart, IconClipboard, IconCheck, IconTimer } from "../components/Icons";
-
-const INTENSITY_OPTIONS: { value: Intensity; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "moderate", label: "Moderate" },
-  { value: "high", label: "High" },
-  { value: "max", label: "Max" },
-];
+import { IconDumbbell, IconPlus, IconCheckCircle, IconCircle, IconTrash, IconHeart, IconClipboard, IconCheck } from "../components/Icons";
 
 export default function ActiveWorkout() {
   const { id } = useParams<{ id: string }>();
@@ -310,21 +303,32 @@ function CardioSetRow({ set, onUpdate, onDelete }: {
   onUpdate: (data: Partial<ExerciseSet>) => void;
   onDelete: () => void;
 }) {
+  const [intensityVal, setIntensityVal] = useState((set.intensity ?? 0).toString());
+  const [iUnit, setIUnit] = useState(set.intensity_unit ?? "");
   const [dur, setDur] = useState((set.duration_minutes ?? 0).toString());
 
   return (
-    <div className={`px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_5rem_3.5rem] sm:grid-cols-[2rem_1fr_5rem_3.5rem] gap-1.5 sm:gap-2 items-center border-t border-surface-300 ${set.is_completed ? "bg-accent-500/10" : ""}`}>
+    <div className={`px-3 sm:px-4 py-2 grid grid-cols-[1.5rem_1fr_4.5rem_3.5rem] sm:grid-cols-[2rem_1fr_5rem_3.5rem] gap-1.5 sm:gap-2 items-center border-t border-surface-300 ${set.is_completed ? "bg-accent-500/10" : ""}`}>
       <span className="text-sm font-medium text-gray-500">{set.set_number}</span>
 
-      <select
-        value={set.intensity ?? "moderate"}
-        onChange={(e) => onUpdate({ intensity: e.target.value as Intensity })}
-        className="w-full bg-surface-200 border border-surface-400 rounded-lg px-1.5 py-1.5 text-sm text-gray-100 focus:ring-1 focus:ring-accent-400"
-      >
-        {INTENSITY_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
+      <div className="flex items-center gap-1">
+        <input
+          type="number"
+          value={intensityVal}
+          placeholder="0"
+          onChange={(e) => setIntensityVal(e.target.value)}
+          onBlur={() => onUpdate({ intensity: parseFloat(intensityVal) || 0 })}
+          className="w-16 bg-surface-200 border border-surface-400 rounded-lg px-1.5 py-1.5 text-sm text-center text-gray-100 focus:ring-1 focus:ring-accent-400"
+        />
+        <input
+          type="text"
+          value={iUnit}
+          placeholder="unit"
+          onChange={(e) => setIUnit(e.target.value)}
+          onBlur={() => onUpdate({ intensity_unit: iUnit.trim() })}
+          className="w-full bg-surface-200 border border-surface-400 rounded-lg px-1.5 py-1.5 text-sm text-gray-100 placeholder:text-gray-600 focus:ring-1 focus:ring-accent-400"
+        />
+      </div>
 
       <div className="flex items-center gap-1">
         <input

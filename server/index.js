@@ -105,7 +105,6 @@ app.use((req, res, next) => {
 
 const VALID_CATEGORIES = ["push", "pull", "legs", "shoulders", "arms", "core", "cardio", "fullBody"];
 const VALID_UNITS = ["kg", "lbs"];
-const VALID_INTENSITIES = ["low", "moderate", "high", "max"];
 
 class ValidationError extends Error {
   constructor(message) {
@@ -246,6 +245,7 @@ try { db.exec("ALTER TABLE workout_templates ADD COLUMN user_id INTEGER REFERENC
 try { db.exec("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0"); } catch {}
 try { db.exec("ALTER TABLE exercise_sets ADD COLUMN intensity TEXT"); } catch {}
 try { db.exec("ALTER TABLE exercise_sets ADD COLUMN duration_minutes REAL"); } catch {}
+try { db.exec("ALTER TABLE exercise_sets ADD COLUMN intensity_unit TEXT"); } catch {}
 
 seedExercises(db);
 
@@ -485,7 +485,8 @@ app.get("/api/sessions", (req, res) => {
   const rows = db.prepare(`
     SELECT s.*, COUNT(DISTINCT e.id) as exercise_count,
            SUM(CASE WHEN es.is_completed = 1 THEN es.weight * es.reps ELSE 0 END) as total_volume,
-           SUM(CASE WHEN es.is_completed = 1 THEN 1 ELSE 0 END) as total_sets
+           SUM(CASE WHEN es.is_completed = 1 THEN 1 ELSE 0 END) as total_sets,
+           SUM(CASE WHEN es.is_completed = 1 THEN COALESCE(es.duration_minutes, 0) ELSE 0 END) as total_duration
     FROM workout_sessions s
     LEFT JOIN workout_entries e ON e.session_id = s.id
     LEFT JOIN exercise_sets es ON es.entry_id = e.id
@@ -515,8 +516,8 @@ app.post("/api/sessions", (req, res) => {
       const entryId = entryInfo.lastInsertRowid;
       const lastSet = getLastHistoricalSet(te.exercise_id, req.user.id);
       if (te.category === "cardio") {
-        db.prepare("INSERT INTO exercise_sets (entry_id, set_number, intensity, duration_minutes) VALUES (?, 1, ?, ?)").run(
-          entryId, lastSet?.intensity ?? "moderate", lastSet?.duration_minutes ?? 0
+        db.prepare("INSERT INTO exercise_sets (entry_id, set_number, intensity, intensity_unit, duration_minutes) VALUES (?, 1, ?, ?, ?)").run(
+          entryId, lastSet?.intensity ?? 0, lastSet?.intensity_unit ?? "", lastSet?.duration_minutes ?? 0
         );
       } else {
         db.prepare("INSERT INTO exercise_sets (entry_id, set_number, weight, reps, unit) VALUES (?, 1, ?, ?, ?)").run(
@@ -575,8 +576,8 @@ app.post("/api/sessions/:id/entries", requireSessionOwner, (req, res) => {
 
     const lastSet = getLastHistoricalSet(exId, req.user.id);
     if (exercise.category === "cardio") {
-      db.prepare("INSERT INTO exercise_sets (entry_id, set_number, intensity, duration_minutes) VALUES (?, 1, ?, ?)").run(
-        entryId, lastSet?.intensity ?? "moderate", lastSet?.duration_minutes ?? 0
+      db.prepare("INSERT INTO exercise_sets (entry_id, set_number, intensity, intensity_unit, duration_minutes) VALUES (?, 1, ?, ?, ?)").run(
+        entryId, lastSet?.intensity ?? 0, lastSet?.intensity_unit ?? "", lastSet?.duration_minutes ?? 0
       );
     } else {
       db.prepare("INSERT INTO exercise_sets (entry_id, set_number, weight, reps, unit) VALUES (?, 1, ?, ?, ?)").run(
@@ -621,7 +622,7 @@ app.delete("/api/entries/:id", (req, res) => {
 
 function getLastHistoricalSet(exerciseId, userId) {
   return db.prepare(`
-    SELECT es.weight, es.reps, es.unit, es.intensity, es.duration_minutes
+    SELECT es.weight, es.reps, es.unit, es.intensity, es.intensity_unit, es.duration_minutes
     FROM exercise_sets es
     JOIN workout_entries we ON we.id = es.entry_id
     JOIN workout_sessions ws ON ws.id = we.session_id
@@ -648,13 +649,13 @@ app.post("/api/entries/:id/sets", (req, res) => {
   if (entry.user_id !== req.user.id) return res.status(403).json({ error: "Forbidden" });
 
   const exercise = db.prepare("SELECT category FROM exercises WHERE id = ?").get(entry.exercise_id);
-  const lastSet = db.prepare("SELECT set_number, weight, reps, unit, intensity, duration_minutes FROM exercise_sets WHERE entry_id = ? ORDER BY set_number DESC LIMIT 1").get(entryId);
+  const lastSet = db.prepare("SELECT set_number, weight, reps, unit, intensity, intensity_unit, duration_minutes FROM exercise_sets WHERE entry_id = ? ORDER BY set_number DESC LIMIT 1").get(entryId);
   const nextNum = (lastSet?.set_number ?? 0) + 1;
 
   if (exercise?.category === "cardio") {
-    const inten = lastSet?.intensity ?? "moderate";
-    const dur = lastSet?.duration_minutes ?? 0;
-    db.prepare("INSERT INTO exercise_sets (entry_id, set_number, intensity, duration_minutes) VALUES (?, ?, ?, ?)").run(entryId, nextNum, inten, dur);
+    db.prepare("INSERT INTO exercise_sets (entry_id, set_number, intensity, intensity_unit, duration_minutes) VALUES (?, ?, ?, ?, ?)").run(
+      entryId, nextNum, lastSet?.intensity ?? 0, lastSet?.intensity_unit ?? "", lastSet?.duration_minutes ?? 0
+    );
   } else {
     const w = lastSet?.weight ?? 0;
     const r = lastSet?.reps ?? 0;
@@ -683,8 +684,12 @@ app.put("/api/sets/:id", (req, res) => {
   }
   if (req.body.intensity !== undefined) {
     db.prepare("UPDATE exercise_sets SET intensity = ? WHERE id = ?").run(
-      req.body.intensity === null ? null : requireEnum(req.body.intensity, VALID_INTENSITIES, "intensity"), id
+      optionalNumber(req.body.intensity, "intensity", 0, 100000) ?? 0, id
     );
+  }
+  if (req.body.intensity_unit !== undefined) {
+    const iu = typeof req.body.intensity_unit === "string" ? req.body.intensity_unit.trim().slice(0, 20) : "";
+    db.prepare("UPDATE exercise_sets SET intensity_unit = ? WHERE id = ?").run(iu, id);
   }
   if (req.body.duration_minutes !== undefined) {
     db.prepare("UPDATE exercise_sets SET duration_minutes = ? WHERE id = ?").run(

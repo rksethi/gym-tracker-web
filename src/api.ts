@@ -49,7 +49,7 @@ export const api = {
   sets: {
     add: (entryId: number) =>
       request<WorkoutSession>(`/entries/${entryId}/sets`, { method: "POST" }),
-    update: (setId: number, data: Partial<{ reps: number; weight: number; unit: string; is_completed: boolean; intensity: string | null; duration_minutes: number | null }>) =>
+    update: (setId: number, data: Partial<{ reps: number; weight: number; unit: string; is_completed: boolean; intensity: number; intensity_unit: string; duration_minutes: number }>) =>
       request<WorkoutSession>(`/sets/${setId}`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (setId: number) =>
       request<WorkoutSession>(`/sets/${setId}`, { method: "DELETE" }),
