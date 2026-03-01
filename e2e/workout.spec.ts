@@ -20,7 +20,7 @@ test.describe("Workout Flow", () => {
     await page.getByRole("button", { name: "Start", exact: true }).click();
 
     // Add an exercise
-    await page.getByText("＋ Add Exercise").click();
+    await page.getByRole("button", { name: /Add Exercise/ }).click();
     await expect(page.getByRole("heading", { name: "Add Exercises" })).toBeVisible();
 
     await page.getByPlaceholder("Search exercises...").fill("Barbell Bench");
@@ -35,11 +35,11 @@ test.describe("Workout Flow", () => {
     await weightInput.fill("135");
     await repsInput.fill("10");
 
-    // Mark set as completed
-    await page.getByText("⭕").first().click();
+    // Mark set as completed (click the circle toggle button)
+    await page.locator('button.text-gray-600').first().click();
 
     // Add another set
-    await page.getByText("＋ Add Set").click();
+    await page.getByRole("button", { name: /Add Set/ }).click();
 
     // Finish workout
     await page.getByRole("button", { name: "Finish" }).first().click();

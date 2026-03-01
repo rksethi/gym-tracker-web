@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
+import { IconDumbbell } from "./components/Icons";
 import Home from "./pages/Home";
 import ActiveWorkout from "./pages/ActiveWorkout";
 import Library from "./pages/Library";
@@ -18,7 +19,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500 bg-[#0c0c0c]">
         <div className="text-center">
-          <span className="text-4xl block mb-2">🏋️</span>
+          <span className="text-accent-400 flex justify-center mb-2"><IconDumbbell size={40} /></span>
           <p className="text-sm">Loading...</p>
         </div>
       </div>

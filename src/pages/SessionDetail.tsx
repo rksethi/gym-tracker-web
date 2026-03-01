@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import type { WorkoutSession } from "../types";
 import { categoryIcon, categoryLabel, formatDuration } from "../types";
+import { IconClipboard, IconCheck, IconCheckCircle, IconCircle, IconHeart } from "../components/Icons";
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -44,9 +45,9 @@ export default function SessionDetail() {
                 setSavedTemplate(true);
                 setTimeout(() => setSavedTemplate(false), 2000);
               }}
-              className="text-sm text-accent-400 hover:text-accent-300 font-medium"
+              className="text-sm text-accent-400 hover:text-accent-300 font-medium inline-flex items-center gap-1"
             >
-              {savedTemplate ? "✅ Saved!" : "📋 Template"}
+              {savedTemplate ? <><IconCheck size={14} /> Saved!</> : <><IconClipboard size={14} /> Template</>}
             </button>
           )}
           <button
@@ -66,7 +67,7 @@ export default function SessionDetail() {
         <Row label="Exercises" value={session.entries.length.toString()} />
         <Row label="Total Sets" value={totalSets.toString()} />
         <Row label="Total Volume" value={`${totalVolume.toFixed(1)} lbs`} />
-        {maxHR > 0 && <Row label="Max Heart Rate" value={`❤️ ${maxHR} bpm`} />}
+        {maxHR > 0 && <Row label="Max Heart Rate" value={`${maxHR} bpm`} icon={<IconHeart size={14} className="text-red-400 inline" />} />}
       </div>
 
       {session.entries.map((entry) => {
@@ -84,7 +85,9 @@ export default function SessionDetail() {
                 </span>
               </div>
               {entry.max_heart_rate && (
-                <span className="text-xs text-red-400 font-medium shrink-0">❤️ {entry.max_heart_rate} bpm</span>
+                <span className="text-xs text-red-400 font-medium shrink-0 inline-flex items-center gap-1">
+                  <IconHeart size={12} /> {entry.max_heart_rate} bpm
+                </span>
               )}
             </div>
 
@@ -94,7 +97,9 @@ export default function SessionDetail() {
                   <span className="text-gray-500">{s.set_number}</span>
                   <span className="text-center font-medium">{s.weight > 0 ? `${s.weight} ${s.unit}` : "—"}</span>
                   <span className="text-center">{s.reps} reps</span>
-                  <span className="text-right">{s.is_completed ? "✅" : "⭕"}</span>
+                  <span className={`text-right ${s.is_completed ? "text-accent-400" : "text-gray-600"}`}>
+                    {s.is_completed ? <IconCheckCircle size={18} /> : <IconCircle size={18} />}
+                  </span>
                 </div>
               ))}
             </div>
@@ -125,11 +130,11 @@ export default function SessionDetail() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div className="px-4 py-3 flex justify-between gap-4 text-sm">
       <span className="text-gray-500 shrink-0">{label}</span>
-      <span className="font-medium text-right break-words min-w-0">{value}</span>
+      <span className="font-medium text-right break-words min-w-0 inline-flex items-center gap-1">{icon}{value}</span>
     </div>
   );
 }

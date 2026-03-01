@@ -16,7 +16,7 @@ test.describe("History", () => {
     await page.getByRole("button", { name: "Start", exact: true }).click();
 
     // Add an exercise
-    await page.getByText("＋ Add Exercise").click();
+    await page.getByRole("button", { name: /Add Exercise/ }).click();
     await page.getByPlaceholder("Search exercises...").fill("Pull-Up");
     await page.getByText("Pull-Up").first().click();
     await page.getByRole("button", { name: /Add \(1\)/ }).click();

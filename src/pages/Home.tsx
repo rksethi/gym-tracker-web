@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import type { SessionSummary, WorkoutTemplate } from "../types";
 import { formatDuration } from "../types";
+import { IconPlus, IconPlay, IconDumbbell, IconTimer, IconBarChart } from "../components/Icons";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function Home() {
             <h2 className="text-xl font-bold">Start Workout</h2>
             <p className="text-gray-800/70 text-sm mt-1">Empty workout</p>
           </div>
-          <span className="text-3xl">＋</span>
+          <IconPlus size={28} />
         </div>
       </button>
 
@@ -91,7 +92,7 @@ export default function Home() {
                   <p className="font-semibold text-sm">{t.name}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{t.exercises.length} exercises</p>
                 </div>
-                <span className="text-accent-400 text-xl">▶</span>
+                <span className="text-accent-400"><IconPlay size={18} /></span>
               </button>
             ))}
           </div>
@@ -103,7 +104,7 @@ export default function Home() {
         <h2 className="text-lg font-bold mb-3">Recent Workouts</h2>
         {sessions.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
-            <p className="text-4xl mb-2">🏋️</p>
+            <div className="flex justify-center mb-2"><IconDumbbell size={40} /></div>
             <p className="text-sm">No workouts yet. Start your first one!</p>
           </div>
         ) : (
@@ -116,10 +117,10 @@ export default function Home() {
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-sm truncate">{s.name}</p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 mt-1">
-                    <span>⏱ {formatDuration(s.duration)}</span>
-                    <span>🏋️ {s.exercise_count} exercises</span>
-                    <span>📊 {s.total_sets} sets</span>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 mt-1">
+                    <span className="inline-flex items-center gap-1"><IconTimer size={12} /> {formatDuration(s.duration)}</span>
+                    <span className="inline-flex items-center gap-1"><IconDumbbell size={12} /> {s.exercise_count} exercises</span>
+                    <span className="inline-flex items-center gap-1"><IconBarChart size={12} /> {s.total_sets} sets</span>
                   </div>
                 </div>
                 <span className="text-xs text-gray-500 shrink-0">

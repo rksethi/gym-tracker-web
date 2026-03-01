@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import type { Exercise, ExerciseSet, WorkoutEntry, WorkoutSession } from "../types";
 import { categoryIcon, categoryLabel, CATEGORIES, formatDuration } from "../types";
+import { IconDumbbell, IconPlus, IconCheckCircle, IconCircle, IconTrash, IconHeart, IconClipboard, IconCheck } from "../components/Icons";
 
 export default function ActiveWorkout() {
   const { id } = useParams<{ id: string }>();
@@ -104,7 +105,7 @@ export default function ActiveWorkout() {
         {/* Exercise Entries */}
         {session.entries.length === 0 && (
           <div className="text-center py-16 text-gray-500">
-            <p className="text-4xl mb-2">🏋️</p>
+            <div className="flex justify-center mb-2"><IconDumbbell size={40} /></div>
             <p className="text-sm">Add exercises to start logging sets</p>
           </div>
         )}
@@ -124,9 +125,9 @@ export default function ActiveWorkout() {
         {/* Add Exercise Button */}
         <button
           onClick={() => setShowAddExercise(true)}
-          className="w-full py-3 rounded-xl bg-accent-500/15 text-accent-400 font-semibold text-sm hover:bg-accent-500/25 transition border border-accent-500/30"
+          className="w-full py-3 rounded-xl bg-accent-500/15 text-accent-400 font-semibold text-sm hover:bg-accent-500/25 transition border border-accent-500/30 inline-flex items-center justify-center gap-1.5"
         >
-          ＋ Add Exercise
+          <IconPlus size={16} /> Add Exercise
         </button>
 
         {/* Save as Template */}
@@ -138,9 +139,9 @@ export default function ActiveWorkout() {
               setSavedTemplate(true);
               setTimeout(() => setSavedTemplate(false), 2000);
             }}
-            className="w-full py-3 rounded-xl text-gray-500 font-medium text-sm hover:bg-surface-100 transition border border-surface-300"
+            className="w-full py-3 rounded-xl text-gray-500 font-medium text-sm hover:bg-surface-100 transition border border-surface-300 inline-flex items-center justify-center gap-1.5"
           >
-            {savedTemplate ? "✅ Template Saved!" : "📋 Save as Template"}
+            {savedTemplate ? <><IconCheck size={16} /> Template Saved!</> : <><IconClipboard size={16} /> Save as Template</>}
           </button>
         )}
       </div>
@@ -200,7 +201,7 @@ function EntryCard({
       </div>
 
       <div className="px-4 py-2 border-b border-surface-300 flex items-center gap-2">
-        <span className="text-red-400 text-sm">❤️</span>
+        <span className="text-red-400"><IconHeart size={14} /></span>
         <input
           type="number"
           placeholder="Max HR (optional)"
@@ -223,8 +224,8 @@ function EntryCard({
         <SetRow key={s.id} set={s} onUpdate={(data) => onUpdateSet(s.id, data)} onDelete={() => onDeleteSet(s.id)} />
       ))}
 
-      <button onClick={onAddSet} className="w-full py-2.5 text-sm font-medium text-accent-400 hover:bg-accent-500/10 transition">
-        ＋ Add Set
+      <button onClick={onAddSet} className="w-full py-2.5 text-sm font-medium text-accent-400 hover:bg-accent-500/10 transition inline-flex items-center justify-center gap-1">
+        <IconPlus size={14} /> Add Set
       </button>
     </div>
   );
@@ -269,12 +270,12 @@ function SetRow({ set, onUpdate, onDelete }: {
       <div className="flex items-center gap-1">
         <button
           onClick={() => onUpdate({ is_completed: !set.is_completed })}
-          className={`text-lg ${set.is_completed ? "text-accent-400" : "text-gray-600 hover:text-gray-400"}`}
+          className={`${set.is_completed ? "text-accent-400" : "text-gray-600 hover:text-gray-400"}`}
         >
-          {set.is_completed ? "✅" : "⭕"}
+          {set.is_completed ? <IconCheckCircle size={20} /> : <IconCircle size={20} />}
         </button>
-        <button onClick={onDelete} className="text-gray-600 active:text-red-400 hover:text-red-400 text-xs transition">
-          🗑
+        <button onClick={onDelete} className="text-gray-600 active:text-red-400 hover:text-red-400 transition">
+          <IconTrash size={14} />
         </button>
       </div>
     </div>
@@ -355,7 +356,9 @@ function ExercisePickerModal({ onAdd, onClose }: { onAdd: (ids: number[]) => voi
             >
               <span>{categoryIcon(e.category)}</span>
               <span className="text-sm flex-1">{e.name}</span>
-              <span className="text-lg">{selected.has(e.id) ? "✅" : "⭕"}</span>
+              <span className={selected.has(e.id) ? "text-accent-400" : "text-gray-600"}>
+                {selected.has(e.id) ? <IconCheckCircle size={20} /> : <IconCircle size={20} />}
+              </span>
             </button>
           ))}
         </div>

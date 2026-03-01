@@ -1,3 +1,9 @@
+import type { ReactNode } from "react";
+import {
+  IconArrowUp, IconArrowDown, IconLeg, IconShoulder, IconBicep,
+  IconTarget, IconHeart, IconDumbbell,
+} from "./components/Icons";
+
 export interface Exercise {
   id: number;
   name: string;
@@ -15,15 +21,15 @@ export type ExerciseCategory =
   | "cardio"
   | "fullBody";
 
-export const CATEGORIES: { value: ExerciseCategory; label: string; icon: string }[] = [
-  { value: "push", label: "Push", icon: "⬆️" },
-  { value: "pull", label: "Pull", icon: "⬇️" },
-  { value: "legs", label: "Legs", icon: "🦵" },
-  { value: "shoulders", label: "Shoulders", icon: "💪" },
-  { value: "arms", label: "Arms", icon: "🦾" },
-  { value: "core", label: "Core", icon: "🎯" },
-  { value: "cardio", label: "Cardio", icon: "❤️" },
-  { value: "fullBody", label: "Full Body", icon: "🏋️" },
+export const CATEGORIES: { value: ExerciseCategory; label: string; icon: ReactNode }[] = [
+  { value: "push", label: "Push", icon: <IconArrowUp size={14} /> },
+  { value: "pull", label: "Pull", icon: <IconArrowDown size={14} /> },
+  { value: "legs", label: "Legs", icon: <IconLeg size={14} /> },
+  { value: "shoulders", label: "Shoulders", icon: <IconShoulder size={14} /> },
+  { value: "arms", label: "Arms", icon: <IconBicep size={14} /> },
+  { value: "core", label: "Core", icon: <IconTarget size={14} /> },
+  { value: "cardio", label: "Cardio", icon: <IconHeart size={14} /> },
+  { value: "fullBody", label: "Full Body", icon: <IconDumbbell size={14} /> },
 ];
 
 export interface ExerciseSet {
@@ -77,8 +83,8 @@ export function categoryLabel(cat: ExerciseCategory): string {
   return CATEGORIES.find((c) => c.value === cat)?.label ?? cat;
 }
 
-export function categoryIcon(cat: ExerciseCategory): string {
-  return CATEGORIES.find((c) => c.value === cat)?.icon ?? "🏋️";
+export function categoryIcon(cat: ExerciseCategory): ReactNode {
+  return CATEGORIES.find((c) => c.value === cat)?.icon ?? <IconDumbbell size={14} />;
 }
 
 export function formatDuration(seconds: number): string {

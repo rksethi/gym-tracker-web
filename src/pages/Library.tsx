@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { Exercise, ExerciseCategory } from "../types";
 import { CATEGORIES, categoryIcon, categoryLabel } from "../types";
+import { IconClipboard, IconPlus } from "../components/Icons";
 
 export default function Library() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -34,13 +35,13 @@ export default function Library() {
             to="/library/templates"
             className="px-2.5 sm:px-3 py-2 rounded-xl bg-surface-200 text-xs sm:text-sm font-medium text-gray-300 hover:bg-surface-300 transition"
           >
-            📋 Templates
+            <span className="inline-flex items-center gap-1"><IconClipboard size={14} /> Templates</span>
           </Link>
           <button
             onClick={() => setShowAddCustom(true)}
             className="px-2.5 sm:px-3 py-2 rounded-xl bg-accent-500 text-gray-900 text-xs sm:text-sm font-medium hover:bg-accent-400 transition"
           >
-            ＋ Add
+            <span className="inline-flex items-center gap-1"><IconPlus size={14} /> Add</span>
           </button>
         </div>
       </div>

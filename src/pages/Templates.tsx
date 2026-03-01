@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import type { Exercise, WorkoutTemplate } from "../types";
 import { CATEGORIES, categoryIcon } from "../types";
+import { IconPlus, IconPlay, IconClipboard, IconCheckCircle, IconCircle } from "../components/Icons";
 
 export default function Templates() {
   const navigate = useNavigate();
@@ -29,13 +30,13 @@ export default function Templates() {
           onClick={() => setShowCreate(true)}
           className="px-3 py-2 rounded-xl bg-accent-500 text-gray-900 text-sm font-medium hover:bg-accent-400 transition"
         >
-          ＋ New Template
+          <span className="inline-flex items-center gap-1"><IconPlus size={14} /> New Template</span>
         </button>
       </div>
 
       {templates.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
-          <p className="text-4xl mb-2">📋</p>
+          <div className="flex justify-center mb-2"><IconClipboard size={40} /></div>
           <p className="text-sm">Create a workout template to quickly start workouts.</p>
         </div>
       ) : (
@@ -50,7 +51,7 @@ export default function Templates() {
                       onClick={() => startFromTemplate(t)}
                       className="text-xs px-3 py-1.5 rounded-lg bg-accent-500 text-gray-900 font-medium hover:bg-accent-400"
                     >
-                      ▶ Start
+                      <span className="inline-flex items-center gap-1"><IconPlay size={12} /> Start</span>
                     </button>
                     <button
                       onClick={() => deleteTemplate(t.id)}
@@ -197,7 +198,9 @@ function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCr
                 >
                   <span>{categoryIcon(e.category)}</span>
                   <span className="text-sm flex-1">{e.name}</span>
-                  <span className="text-lg">{selected.has(e.id) ? "✅" : "⭕"}</span>
+                  <span className={selected.has(e.id) ? "text-accent-400" : "text-gray-600"}>
+                    {selected.has(e.id) ? <IconCheckCircle size={20} /> : <IconCircle size={20} />}
+                  </span>
                 </button>
               ))}
             </div>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { IconDumbbell } from "../components/Icons";
 
 const PASSWORD_RULES = [
   { test: (p: string) => p.length >= 8, label: "At least 8 characters" },
@@ -44,7 +45,7 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-[#0c0c0c] px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="text-5xl">🏋️</span>
+          <span className="text-accent-400 flex justify-center"><IconDumbbell size={48} /></span>
           <h1 className="text-2xl font-bold text-gray-100 mt-3">GymTracker</h1>
           <p className="text-gray-500 text-sm mt-1">Create your account</p>
         </div>
