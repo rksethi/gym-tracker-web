@@ -11,6 +11,8 @@ import Templates from "./pages/Templates";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Admin from "./pages/Admin";
+import Privacy from "./pages/Privacy";
+import Settings from "./pages/Settings";
 import type { ReactNode } from "react";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -48,6 +50,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
         <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route element={<RequireAuth><Layout /></RequireAuth>}>
           <Route path="/" element={<Home />} />
           <Route path="/library" element={<Library />} />
@@ -55,6 +58,7 @@ export default function App() {
           <Route path="/history" element={<History />} />
           <Route path="/history/:id" element={<SessionDetail />} />
           <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
         <Route path="/workout/:id" element={<RequireAuth><ActiveWorkout /></RequireAuth>} />
       </Routes>

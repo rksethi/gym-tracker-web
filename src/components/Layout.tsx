@@ -3,19 +3,20 @@ import { useAuth } from "../context/AuthContext";
 import { IconHome, IconLibrary, IconHistory, IconSettings, IconDumbbell } from "./Icons";
 import type { ReactNode } from "react";
 
-type Link = { to: string; label: string; icon: ReactNode };
+type NavItem = { to: string; label: string; icon: ReactNode };
 
-const baseLinks: Link[] = [
+const baseLinks: NavItem[] = [
   { to: "/", label: "Home", icon: <IconHome size={20} /> },
   { to: "/library", label: "Library", icon: <IconLibrary size={20} /> },
   { to: "/history", label: "History", icon: <IconHistory size={20} /> },
+  { to: "/settings", label: "Settings", icon: <IconSettings size={20} /> },
 ];
 
 export default function Layout() {
   const { user, logout } = useAuth();
 
-  const links: Link[] = user?.is_admin
-    ? [...baseLinks, { to: "/admin", label: "Admin", icon: <IconSettings size={20} /> }]
+  const links: NavItem[] = user?.is_admin
+    ? [...baseLinks.filter((l) => l.to !== "/admin"), { to: "/admin", label: "Admin", icon: <IconSettings size={20} /> }]
     : baseLinks;
 
   return (

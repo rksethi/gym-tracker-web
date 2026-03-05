@@ -17,6 +17,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [consentToPrivacy, setConsentToPrivacy] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,13 +27,14 @@ export default function Register() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    if (!consentToPrivacy) { setError("You must accept the Privacy Policy to create an account"); return; }
     if (!inviteCode.trim()) { setError("Invite code is required"); return; }
     if (!allRulesPass) { setError("Password does not meet requirements"); return; }
     if (!passwordsMatch) { setError("Passwords do not match"); return; }
 
     setSubmitting(true);
     try {
-      await register(email, password, inviteCode.trim());
+      await register(email, password, inviteCode.trim(), true);
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Registration failed");
@@ -108,6 +110,23 @@ export default function Register() {
             )}
           </div>
 
+          <div className="flex items-start gap-2">
+            <input
+              id="consentToPrivacy"
+              type="checkbox"
+              checked={consentToPrivacy}
+              onChange={(e) => setConsentToPrivacy(e.target.checked)}
+              className="mt-1 rounded border-surface-400 bg-surface-200 text-accent-500 focus:ring-accent-500"
+            />
+            <label htmlFor="consentToPrivacy" className="text-sm text-gray-400">
+              I have read and agree to the{" "}
+              <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent-400 hover:underline">
+                Privacy Policy
+              </Link>{" "}
+              and consent to the collection and use of my personal information as described.
+            </label>
+          </div>
+
           <div>
             <label htmlFor="confirm" className="block text-sm font-medium text-gray-400 mb-1">Confirm Password</label>
             <input
@@ -127,7 +146,7 @@ export default function Register() {
 
           <button
             type="submit"
-            disabled={submitting || !allRulesPass || !passwordsMatch}
+            disabled={submitting || !consentToPrivacy || !allRulesPass || !passwordsMatch}
             className="w-full bg-accent-500 hover:bg-accent-400 text-gray-900 font-semibold py-2.5 rounded-xl text-sm transition disabled:opacity-50"
           >
             {submitting ? "Creating account..." : "Create account"}

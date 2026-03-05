@@ -174,7 +174,9 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE COLLATE NOCASE,
     password_hash TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    consent_accepted_at TEXT,
+    privacy_notice_version TEXT
   );
   CREATE TABLE IF NOT EXISTS exercises (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -246,6 +248,8 @@ try { db.exec("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0"
 try { db.exec("ALTER TABLE exercise_sets ADD COLUMN intensity TEXT"); } catch {}
 try { db.exec("ALTER TABLE exercise_sets ADD COLUMN duration_minutes REAL"); } catch {}
 try { db.exec("ALTER TABLE exercise_sets ADD COLUMN intensity_unit TEXT"); } catch {}
+try { db.exec("ALTER TABLE users ADD COLUMN consent_accepted_at TEXT"); } catch {}
+try { db.exec("ALTER TABLE users ADD COLUMN privacy_notice_version TEXT"); } catch {}
 
 seedExercises(db);
 
@@ -310,7 +314,12 @@ function requireSessionOwner(req, res, next) {
 // Auth routes (public — no requireAuth)
 // ---------------------------------------------------------------------------
 
+const PRIVACY_NOTICE_VERSION = "1.0";
+
 app.post("/api/auth/register", loginLimiter, async (req, res) => {
+  if (req.body.consentToPrivacyPolicy !== true) {
+    throw new ValidationError("You must accept the Privacy Policy to create an account");
+  }
   const email = validateEmail(req.body.email);
   const password = validatePassword(req.body.password);
   const code = requireString(req.body.inviteCode, "invite code", 20);
@@ -323,7 +332,10 @@ app.post("/api/auth/register", loginLimiter, async (req, res) => {
   const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
   if (existing) throw new ValidationError("Email already registered");
   const hash = await bcrypt.hash(password, SALT_ROUNDS);
-  const info = db.prepare("INSERT INTO users (email, password_hash) VALUES (?, ?)").run(email, hash);
+  const consentAt = new Date().toISOString();
+  const info = db.prepare(
+    "INSERT INTO users (email, password_hash, consent_accepted_at, privacy_notice_version) VALUES (?, ?, ?, ?)"
+  ).run(email, hash, consentAt, PRIVACY_NOTICE_VERSION);
   const userId = info.lastInsertRowid;
 
   db.prepare("UPDATE invite_codes SET used_by = ?, used_at = datetime('now') WHERE id = ?").run(userId, invite.id);
@@ -398,6 +410,67 @@ app.get("/api/auth/me", (req, res) => {
 // ---------------------------------------------------------------------------
 
 app.use("/api", requireAuth);
+
+// ---------------------------------------------------------------------------
+// Privacy / data subject rights (GDPR, PIPEDA, CCPA)
+// ---------------------------------------------------------------------------
+
+app.get("/api/privacy/export", (req, res) => {
+  const userId = req.user.id;
+  const user = db.prepare("SELECT id, email, created_at, consent_accepted_at, privacy_notice_version FROM users WHERE id = ?").get(userId);
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const sessions = db.prepare("SELECT * FROM workout_sessions WHERE user_id = ? ORDER BY date DESC").all(userId);
+  const templates = db.prepare("SELECT * FROM workout_templates WHERE user_id = ?").all(userId);
+  const customExercises = db.prepare("SELECT * FROM exercises WHERE user_id = ?").all(userId);
+  const exportData = {
+    exported_at: new Date().toISOString(),
+    user: { id: user.id, email: user.email, created_at: user.created_at, consent_accepted_at: user.consent_accepted_at, privacy_notice_version: user.privacy_notice_version },
+    workout_sessions: sessions,
+    workout_templates: templates,
+    custom_exercises: customExercises,
+  };
+  for (const s of sessions) {
+    s.entries = db.prepare(`
+      SELECT we.*, e.name as exercise_name FROM workout_entries we JOIN exercises e ON e.id = we.exercise_id WHERE we.session_id = ?
+    `).all(s.id);
+    for (const e of s.entries) {
+      e.sets = db.prepare("SELECT * FROM exercise_sets WHERE entry_id = ? ORDER BY set_number").all(e.id);
+    }
+  }
+  res.set("Content-Disposition", "attachment; filename=gymtracker-data-export.json");
+  res.json(exportData);
+});
+
+app.post("/api/auth/delete-account", async (req, res) => {
+  const userId = req.user.id;
+  const user = db.prepare("SELECT id, email FROM users WHERE id = ?").get(userId);
+  if (!user) return res.status(404).json({ error: "User not found" });
+  db.exec("BEGIN");
+  try {
+    const sessionIds = db.prepare("SELECT id FROM workout_sessions WHERE user_id = ?").all(userId).map((r) => r.id);
+    for (const sid of sessionIds) {
+      const entryIds = db.prepare("SELECT id FROM workout_entries WHERE session_id = ?").all(sid).map((r) => r.id);
+      for (const eid of entryIds) {
+        db.prepare("DELETE FROM exercise_sets WHERE entry_id = ?").run(eid);
+      }
+      db.prepare("DELETE FROM workout_entries WHERE session_id = ?").run(sid);
+    }
+    db.prepare("DELETE FROM workout_sessions WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM template_exercises WHERE template_id IN (SELECT id FROM workout_templates WHERE user_id = ?)").run(userId);
+    db.prepare("DELETE FROM workout_templates WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM exercises WHERE user_id = ?").run(userId);
+    db.prepare("UPDATE invite_codes SET created_by = NULL WHERE created_by = ?").run(userId);
+    db.prepare("DELETE FROM users WHERE id = ?").run(userId);
+    db.exec("COMMIT");
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
+  }
+  logAccess("account_deleted", user.email, userId, req);
+  res.clearCookie(COOKIE_NAME, { path: "/" });
+  res.set("Clear-Site-Data", '"cookies", "storage"');
+  res.json({ ok: true });
+});
 
 // ---------------------------------------------------------------------------
 // Admin middleware & routes

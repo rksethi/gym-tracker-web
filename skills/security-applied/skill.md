@@ -51,6 +51,14 @@
 | T21 / T5510 | TLS / SSL | Documented — enforce HTTPS in production (reverse proxy) |
 | T4746 / T4751 | Container images | Documented — use minimal base, scan in CI |
 
+## Privacy compliance (GDPR, PIPEDA, CCPA)
+
+| Task | Title | Status |
+|------|--------|--------|
+| T178 | Obtain consent from users prior to collecting personal information | Implemented: consent checkbox at registration, privacy notice at /privacy, consent_accepted_at and privacy_notice_version stored |
+| T194 | Obtain user consent for tracking cookies | Implemented: only strictly necessary auth cookie; no tracking cookies. Note in SD Elements for future non-essential cookies |
+| Data subject rights | Access, erasure, portability | Implemented: GET /api/privacy/export, POST /api/auth/delete-account, Settings page with Export my data and Delete account |
+
 ## Remaining Recommendations
 
 1. **Frontend:** Ensure all API calls (fetch/axios) send `X-Requested-With: XMLHttpRequest` (or similar) for CSRF.

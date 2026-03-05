@@ -36,6 +36,7 @@ test.describe("Authentication", () => {
     await page.getByPlaceholder("you@example.com").fill("newuser@test.com");
     await page.getByPlaceholder("Create a password").fill("NewUser1234");
     await page.getByPlaceholder("Confirm your password").fill("NewUser1234");
+    await page.getByRole("checkbox", { name: /privacy policy/i }).check();
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByText("Start Workout")).toBeVisible();
   });
@@ -46,6 +47,7 @@ test.describe("Authentication", () => {
     await page.getByPlaceholder("you@example.com").fill("bad@test.com");
     await page.getByPlaceholder("Create a password").fill("BadUser1234");
     await page.getByPlaceholder("Confirm your password").fill("BadUser1234");
+    await page.getByRole("checkbox", { name: /privacy policy/i }).check();
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByText(/invalid or expired invite code/i)).toBeVisible();
   });
