@@ -4,6 +4,7 @@ import { api } from "../api";
 import type { ExerciseSet, WorkoutEntry, WorkoutSession } from "../types";
 import { categoryIcon, categoryLabel, formatDuration } from "../types";
 import { IconClipboard, IconCheck, IconCheckCircle, IconCircle, IconHeart, IconTrash, IconPlus } from "../components/Icons";
+import ExercisePickerModal from "../components/ExercisePickerModal";
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,7 @@ export default function SessionDetail() {
   const [editing, setEditing] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [savedTemplate, setSavedTemplate] = useState(false);
+  const [showAddExercise, setShowAddExercise] = useState(false);
 
   useEffect(() => {
     if (id) api.sessions.get(Number(id)).then(setSession);
@@ -68,6 +70,13 @@ export default function SessionDetail() {
   async function updateName(name: string) {
     if (!id) return;
     await api.sessions.update(Number(id), { name });
+    await refresh();
+  }
+
+  async function addExercises(exerciseIds: number[]) {
+    if (!id) return;
+    await api.entries.add(Number(id), exerciseIds);
+    setShowAddExercise(false);
     await refresh();
   }
 
@@ -183,6 +192,19 @@ export default function SessionDetail() {
           </section>
         );
       })}
+
+      {editing && (
+        <button
+          onClick={() => setShowAddExercise(true)}
+          className="w-full py-3 rounded-xl bg-accent-500/15 text-accent-400 font-semibold text-sm hover:bg-accent-500/25 transition border border-accent-500/30 inline-flex items-center justify-center gap-1.5"
+        >
+          <IconPlus size={16} /> Add Exercise
+        </button>
+      )}
+
+      {showAddExercise && (
+        <ExercisePickerModal onAdd={addExercises} onClose={() => setShowAddExercise(false)} />
+      )}
 
       {showDelete && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">

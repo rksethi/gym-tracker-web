@@ -699,7 +699,7 @@ function getLastHistoricalSet(exerciseId, userId) {
     FROM exercise_sets es
     JOIN workout_entries we ON we.id = es.entry_id
     JOIN workout_sessions ws ON ws.id = we.session_id
-    WHERE we.exercise_id = ? AND ws.user_id = ? AND ws.is_completed = 1 AND es.is_completed = 1
+    WHERE we.exercise_id = ? AND ws.user_id = ? AND ws.is_completed = 1
     ORDER BY ws.date DESC, es.set_number DESC LIMIT 1
   `).get(exerciseId, userId);
 }
